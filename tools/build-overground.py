@@ -1,7 +1,9 @@
 r"""Build overground/index.html from the newest Agent Lockhart clay-film build.
 
 Usage:  python tools/build-overground.py [path-to-lockhart-clay-film-vNN.html]
-With no argument it picks the newest D:\c\lockhart-clay-film-v*.html.
+With no argument it picks the newest D:\c\overground-v*.html (the Overground
+build, with its own LIFT OFF card and the hand-sculpted red explorer rocket),
+falling back to the newest lockhart-clay-film-v*.html.
 
 The hosted page is the game file plus four INFOSOUL-marked patches:
   1. the renderer, scene and camera are built synchronously before boot, so
@@ -21,9 +23,10 @@ import glob, io, os, re, sys
 if len(sys.argv) > 1:
     src = sys.argv[1]
 else:
-    cands = glob.glob(r"D:\c\lockhart-clay-film-v*.html")
-    cands = [c for c in cands if re.search(r"-v\d+\.html$", c)]
-    src = max(cands, key=lambda p: int(re.search(r"-v(\d+)\.html$", p).group(1)))
+    def newest(pattern):
+        c = [x for x in glob.glob(pattern) if re.search(r"-v\d+\.html$", x)]
+        return max(c, key=lambda p: int(re.search(r"-v(\d+)\.html$", p).group(1))) if c else None
+    src = newest(r"D:\c\overground-v*.html") or newest(r"D:\c\lockhart-clay-film-v*.html")
 dst = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "overground", "index.html")
 
 g = io.open(src, encoding="utf-8", newline="").read()
@@ -73,20 +76,24 @@ swap('''<div id="loading">
   <div id="loadTrack"><div id="loadFill"></div></div>
   <div id="loadLabel">building the sky</div>''', "loading card")
 
+locked = "<!-- OVERGROUND LOCK START -->" in g   # the source has its own front door: keep it
 hook = '''
 <!-- INFOSOUL DEEP LINK START -->
 <style>
 /* infosoullaboratories.com hosts this page as OVERGROUND only: the sky, not the game. */
 body:not(.overground) #overlay, body:not(.overground) .hud, body:not(.overground) #pad { visibility: hidden !important; }
-#ogList button.home, #ogHint { display: none !important; }
+body.overground #ogSplash:not(.off) { display: none !important; }
+body:not(.overgroundBuild) #ogList button.home, body:not(.overgroundBuild) #ogHint { display: none !important; }
 body.overground .hud, body.overground #board, body.overground #pad, body.overground #boutCard { display: none !important; }
 </style>
 <script>
 (() => {
  "use strict";
+ const LOCKED = ''' + ("true" if locked else "false") + ''';   /* the build has its own LIFT OFF card */
  let tries = 0;
  const t = setInterval(() => {
   const OG = window.LOCKHART_OVERGROUND, b = document.getElementById("overgroundBtn");
+  if (LOCKED) { if (OG) { clearInterval(t); setInterval(clearDeckForTheSky, 600); } else if (++tries > 1200) clearInterval(t); return; }
   if (OG && b) { clearInterval(t); try { b.click(); } catch (e) {} keep(OG); }
   else if (++tries > 1200) clearInterval(t);
  }, 250);
@@ -116,7 +123,7 @@ body.overground .hud, body.overground #board, body.overground #pad, body.overgro
    clearDeckForTheSky();
   }, 600);
  }
- window.addEventListener("keydown", e => {
+ if (!LOCKED) window.addEventListener("keydown", e => {
   const OG = window.LOCKHART_OVERGROUND;
   if (e.code === "Escape" && OG && OG.on && !(OG.journey && OG.journey.on) && OG.state === "deck") { e.stopImmediatePropagation(); e.preventDefault(); }
  }, true);

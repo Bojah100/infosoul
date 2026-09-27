@@ -14107,7 +14107,6 @@ function webSwingPost(f, dx, dz) {
   let best = null, bs = -Infinity;
   for (let i = 0; i < LAMP_POSTS.length; i++) {
     const L = LAMP_POSTS[i];
-    if (L._gone) continue;                         /* torn off: there is no top to throw a line at */
     const ex = L.x - f.x, ez = L.z - f.y;
     const d = Math.hypot(ex, ez) || 1e-4;
     const ahead = (ex / d) * dx + (ez / d) * dz;
@@ -19936,8 +19935,7 @@ function driveHuman(f, dt, pad) {
 
   /* holding back with no swing is a guard */
   f.blocking = !f.atk && fwd < 0 && f.stagger <= 0 && f.h <= 0 && f.landT <= 0 && !(f.jumpPrep > 0);
-  /* guarding, he still circles: the guard slows the walk, not the sidestep */
-  const spd = (f.jumpPrep > 0 ? 0.2 : (f.stumble > 0 ? 0.9 : (f.h > 0 ? 0.5 : (f.landT > 0 ? 0.8 : (f.atk ? 0.7 : (f.blocking ? (side ? 2.5 : 1.6) : 3.6))))))
+  const spd = (f.jumpPrep > 0 ? 0.2 : (f.stumble > 0 ? 0.9 : (f.h > 0 ? 0.5 : (f.landT > 0 ? 0.8 : (f.atk ? 0.7 : (f.blocking ? 1.6 : 3.6))))))
             * (f.snared > 0 ? 0.38 : 1)
               * (fwd < 0 ? 0.85 : 1)
               * vigour(f);                       /* slower the emptier the bar */
@@ -19969,8 +19967,8 @@ function startRoll(f) {
   if (!fwd && !side) { fwd = -1; }
   const m = Math.hypot(fwd, side) || 1;
   f.rollDir = Math.atan2((ay * fwd + sy * side) / m, (ax * fwd + sx * side) / m);
-  f.rollTotal = quirkOf(f).flips ? 0.56 : 0.44;  /* going over takes longer than stepping */
-  f.rollT = f.rollTotal; f.rollCool = 0.7; f.invuln = quirkOf(f).flips ? 0.42 : 0.34;
+  f.rollTotal = quirkOf(f).flips ? 0.56 : 0.4;   /* going over takes longer than stepping */
+  f.rollT = f.rollTotal; f.rollCool = 0.75; f.invuln = quirkOf(f).flips ? 0.40 : 0.28;
   f.blocking = false;
   A.whoosh(0.2);
 }
@@ -19983,7 +19981,7 @@ function startRoll(f) {
 function updateRoll(f, dt) {
   if (f.rollT <= 0) return false;
   f.rollT -= dt;
-  const rs = 8.2 * clamp(f.rollT / (f.rollTotal || 0.44), 0.25, 1);   /* a real step aside: further, and out of the way sooner */
+  const rs = 7.0 * clamp(f.rollT / (f.rollTotal || 0.4), 0.25, 1);
   moveFighter(f, Math.cos(f.rollDir) * rs * dt, Math.sin(f.rollDir) * rs * dt, false);
   f.phase += dt * 14; f.stride = 1;
   return true;
@@ -28712,7 +28710,7 @@ startMatch = function (...x) { if (BAL.on) balanceSetup(false); if (CITY.on) cit
 /* hanging on: a man sliding off near a post grabs it and holds on */
 function balPostNear(f, within) {
   let best = null, bd = within;
-  for (const L of LAMP_POSTS) { if (!L.bal) continue; const d = Math.hypot(L.bx - f.x, L.bz - f.y); if (d < bd) { bd = d; best = L; } }   /* a stump is still something to hold */
+  for (const L of LAMP_POSTS) { if (!L.bal) continue; const d = Math.hypot(L.bx - f.x, L.bz - f.y); if (d < bd) { bd = d; best = L; } }
   return best;
 }
 const balUpdateBody = updateBody;
@@ -28746,7 +28744,6 @@ updateBody = function (f, dt) {
         const tx2 = -Math.sin(H.phi), tz2 = Math.cos(H.phi);
         H.w += ((BAL.gx * tx2 + BAL.gz * tz2) * BAL_G * 1.6 - H.w * 1.4) * dt;
         if (povFighter(f)) H.w *= Math.pow(0.02, dt);   /* in his shoes: he hangs on, he does not go round (see IN HIS SHOES) */
-        if (H.L._gone) H.w = 0;                           /* a stump: he holds on, nothing to swing round */
         H.phi += H.w * dt;
         /* hang at arm's length: start close and let the reach settle it */
         if (H.armR === undefined) H.armR = 0.5 * ((f.rig && f.rig.scale) || 1);
@@ -30695,34 +30692,15 @@ function galStudio() {
   return (GAL_SCENE = S);
 }
 function galFocus(rig) {
-  /* A shape put away by scaling it to nothing is still "visible", and a
-     plate parked well above the head for later is too; both used to be
-     drawn into the frame, which backed the camera off until the face was
-     a dot at the bottom of the portrait. So: nothing squashed to zero on
-     any axis, and nothing that does not sit with the biggest piece (the
-     skull) -- the face is whatever is within a head's reach of it. */
-  const box = new THREE.Box3(), parts = [];
-  const add = (root) => root.traverse(o => {
+  const box = new THREE.Box3(), add = (root) => root.traverse(o => {
     if (!o.isMesh) return; let v = true, p = o; while (p) { if (!p.visible) { v = false; break; } p = p.parent; }
-    if (!v || !o.geometry) return;
-    const me = o.matrixWorld.elements, sx = Math.hypot(me[0], me[1], me[2]), sy = Math.hypot(me[4], me[5], me[6]), sz = Math.hypot(me[8], me[9], me[10]);
-    if (Math.min(sx, sy, sz) < 1e-3) return;
-    o.geometry.computeBoundingBox(); const bb = o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld);
-    const S = bb.getSize(new THREE.Vector3()); if (S.x < 0.004 && S.y < 0.004 && S.z < 0.004) return;
-    parts.push({ bb: bb, vol: Math.max(S.x, 0.004) * Math.max(S.y, 0.004) * Math.max(S.z, 0.004) }); });
-  const gather = () => {
-    if (!parts.length) return;
-    const skull = parts.slice().sort((a, b) => b.vol - a.vol)[0], c = skull.bb.getCenter(new THREE.Vector3()), reach = Math.max(0.45, skull.bb.getSize(new THREE.Vector3()).length() * 1.1);
-    for (const q of parts) { if (q.bb.getCenter(new THREE.Vector3()).distanceTo(c) <= reach) box.union(q.bb); }
-    parts.length = 0;
-  };
+    if (!v || !o.geometry) return; o.geometry.computeBoundingBox(); box.union(o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld)); });
   rig.root.updateMatrixWorld(true);
   if (rig.cerb) rig.cerb.heads.forEach(h => add(h.head));
   else if (rig.rex) add(rig.rex.head);
   else if (rig.widow) add(rig.root);
   else if (rig.head) add(rig.head);
-  gather();
-  if (box.isEmpty()) { add(rig.root); gather(); }
+  if (box.isEmpty()) add(rig.root);
   return box;
 }
 function galShoot(i) {
@@ -32987,8 +32965,6 @@ const CAST_XMAS = [
         rig.root.traverse(o => { if (o.isMesh && o.visible && o.parent !== rig.root) o.visible = false; });
         const snow = stdMat("snowBody", 0xf2f6fa, 0.85, 0), coal = stdMat("snowCoal", 0x16161a, 0.5, 0);
         const body = new THREE.Group(); rig.hips.add(body); body.position.y = -0.1 * S;
-        /* the bottom ball sits on the boards, off the root so it never bobs with the hips: a snowman does not float */
-        const b0 = new THREE.Mesh(lumpy(new THREE.SphereGeometry(0.5 * S, 24, 18), 0.014 * S, 11), snow); b0.position.y = 0.5 * S; b0.castShadow = true; b0.receiveShadow = true; rig.root.add(b0);
         const b1 = new THREE.Mesh(lumpy(new THREE.SphereGeometry(0.42 * S, 22, 16), 0.012 * S, 2), snow); b1.position.y = 0.05 * S; b1.castShadow = true; body.add(b1);
         const b2 = new THREE.Mesh(lumpy(new THREE.SphereGeometry(0.32 * S, 20, 14), 0.01 * S, 5), snow); b2.position.y = 0.6 * S; b2.castShadow = true; body.add(b2);
         for (let i = 0; i < 3; i++) { const c = new THREE.Mesh(new THREE.SphereGeometry(0.035 * S, 10, 8), coal); c.position.set(0, (0.45 + i * 0.18) * S, 0.3 * S); body.add(c); }
@@ -43149,7 +43125,7 @@ else {
 (() => {
  "use strict";
  if (typeof THREE === "undefined" || typeof LAMP_POSTS === "undefined" || typeof updateBody !== "function" || typeof animateRig !== "function" || typeof update !== "function" || typeof scene === "undefined") return;
- const LP = { on: true, big: ["brute", "bumble", "bigfoot", "boss", "neph"], agile: ["crawler", "dragon", "mouse", "widow", "grey", "popstar"], clubW: 1.2, halfW: 0.55, falling: [],
+ const LP = { on: true, big: ["brute", "bumble", "bigfoot", "boss", "neph"], agile: ["crawler", "dragon", "mouse", "widow", "grey", "popstar"], clubW: 1.2, halfW: 0.55,
               broken: [], fallen: [], shots: [], arts: {}, diag: { tears: 0, rails: 0, swings: 0, throws: 0, hits: 0, poles: 0, poleHits: 0, slams: 0, cols: 0, err: null } };
  window.LOCKHART_LAMPPOST = LP;
  const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -43289,11 +43265,6 @@ else {
    uncollide(L);
   }
   rec.G = G; rec.sc = L.bal ? 0.9 : 0.42; L._gone = true;
-  for (const o of fighters()) if (o) {
-   if (o._pole && o._pole.L === L) { o._pole = null; if (o.rig) o.rig._pole = null; o.h = 0; o._poleCool = 2; }
-   if (o.postHold && o.postHold.L === L) { o.postHold = null; o.holdCool = 1.0; if (o.rig && o.rig.contact) o.rig.contact.visible = true; }
-   if (o.web && o.web.post === L && typeof endWebSwing === "function") { try { endWebSwing(o, true); } catch (e) {} }   /* the line goes slack: the top it was tied to is in a hand */
-  }
   if (!hold(f, G, rec.sc)) { L._gone = false; return false; }
   f._club = { L: L, G: G, t: 0, rec: rec, tear: 0.7 };
   f._clubCool = 25; f.atk = null; f.cast = null;
@@ -43335,89 +43306,16 @@ else {
   return true;
  }
  /* the post on the boards, lying where it fell */
- /* over the edge: the post falls into the dark and is gone until the next bout */
- function fallOff(rec, x, z) {
-  const G = rec.G; G.isStudio = false; scene.attach(G);
-  const fl = (bal() && typeof floorAt === "function") ? floorAt(x, z) : 0;
-  G.position.set(x, fl, z); rec.falling = { vy: 0, vx: (x - CENTER.x) * 0.3, vz: (z - CENTER.y) * 0.3, t: 0 };
-  const i = LP.fallen.indexOf(rec); if (i >= 0) LP.fallen.splice(i, 1);
-  LP.falling.push(rec); LP.diag.offs = (LP.diag.offs || 0) + 1;
- }
- function fallingTick(dt) {
-  for (let i = LP.falling.length - 1; i >= 0; i--) {
-   const rec = LP.falling[i], F = rec.falling, G = rec.G;
-   F.t += dt; F.vy -= 9.8 * dt; G.position.x += F.vx * dt; G.position.y += F.vy * dt; G.position.z += F.vz * dt; G.rotation.x += 1.6 * dt; G.rotation.z += 0.9 * dt;
-   if (F.t > 3.5 || G.position.y < -40) { if (G.parent) G.parent.remove(G); rec.falling = null; LP.falling.splice(i, 1); }
-  }
- }
  function put(rec, x, z) {
-  if (bal() && Math.hypot(x - CENTER.x, z - CENTER.y) > RING_R - 0.15) { fallOff(rec, x, z); return; }
   const G = rec.G; G.isStudio = false;
   scene.attach(G);
   const fl = (bal() && typeof floorAt === "function") ? floorAt(x, z) : 0;
   G.position.set(x, fl + (rec.kind === "rail" ? 0.1 : 0.14), z); G.rotation.set(0, Math.random() * Math.PI * 2, Math.PI / 2); G.scale.setScalar(rec.sc);
   if (rec.bal && BAL.group) BAL.group.attach(G);
   else if (typeof LOCKHART_SET !== "undefined" && LOCKHART_SET.placed) { rec.placed = { name: "LAMP POST", obj: G, x: x, z: z, rot: 0 }; LOCKHART_SET.placed.push(rec.placed); }
-  rec.landedAt = (typeof game !== "undefined" && game) ? game.time : 0;
-  rec.at = { x: x, z: z }; rec.slide = { vx: 0, vz: 0 };
   LP.fallen.push(rec);
  }
- /* a post on the tipping board rolls downhill, and off */
- function slideTick(dt) {
-  if (!bal() || !LP.fallen.length || typeof BAL_G !== "number") return;
-  for (let i = LP.fallen.length - 1; i >= 0; i--) {
-   const rec = LP.fallen[i]; if (!rec.at || !rec.G || !rec.G.parent) continue;
-   const S = rec.slide;
-   S.vx += (BAL.gx * BAL_G * 0.55 - S.vx * 1.2) * dt; S.vz += (BAL.gz * BAL_G * 0.55 - S.vz * 1.2) * dt;
-   if (Math.abs(S.vx) + Math.abs(S.vz) < 0.01) continue;
-   rec.at.x += S.vx * dt; rec.at.z += S.vz * dt;
-   const G = rec.G, fl = (typeof floorAt === "function") ? floorAt(rec.at.x, rec.at.z) : 0;
-   /* it lies on the board, which tips: the board group carries it, so its local x/z are the ring's */
-   if (G.parent === BAL.group) { G.position.x = rec.at.x - CENTER.x; G.position.z = rec.at.z - CENTER.y; G.position.y = 0.14; }
-   else G.position.set(rec.at.x, fl + 0.14, rec.at.z);
-   if (Math.hypot(rec.at.x - CENTER.x, rec.at.z - CENTER.y) > RING_R - 0.15) fallOff(rec, rec.at.x, rec.at.z);
-  }
- }
  function drop(f) { const C = f._club; if (!C) return; f._club = null; LP.diag.drops = (LP.diag.drops || 0) + 1; put(C.rec, f.x, f.y); }
- /* a post on the ground is still a post: a big man who walks up to it takes
-    it up again, to swing or to throw; anyone else who runs across it goes over */
- const BOX = new THREE.Box3(), WP = new THREE.Vector3();
- function pickUp(f, rec) {
-  const i = LP.fallen.indexOf(rec); if (i >= 0) LP.fallen.splice(i, 1);
-  if (rec.placed && typeof LOCKHART_SET !== "undefined" && LOCKHART_SET.placed) { const j = LOCKHART_SET.placed.indexOf(rec.placed); if (j >= 0) LOCKHART_SET.placed.splice(j, 1); rec.placed = null; }
-  const G = rec.G; G.isStudio = false;
-  if (!hold(f, G, rec.sc, rec.kind)) { LP.fallen.push(rec); return false; }
-  f._club = { L: rec.L, G: G, t: 0, rec: rec, tear: 0.35 };
-  f._clubCool = 25; f._clubThrowCool = 4; f.atk = null; f.cast = null;
-  LP.diag.pickups = (LP.diag.pickups || 0) + 1;
-  say(f, ["MINE", "AGAIN", "COME HERE"][Math.floor(Math.random() * 3)]);
-  try { if (typeof A !== "undefined" && A.clack) A.clack(undefined, 0.5); } catch (e) {}
-  return true;
- }
- function trip(f) {
-  f.downT = f.downTotal = 0.9; f.downHit = false; f.thrownT = 0; f.atk = null; f.cast = null; f.blocking = false;
-  f.kx += Math.cos(f.ang) * 2.2; f.ky += Math.sin(f.ang) * 2.2;
-  f._tripCool = 3.5; LP.diag.trips = (LP.diag.trips || 0) + 1;
-  say(f, ["WHOA", "OOF", "WHAT THE"][Math.floor(Math.random() * 3)]);
-  try { if (typeof A !== "undefined" && A.thud) A.thud(0.5, 60); } catch (e) {}
- }
- function fallenTick() {
-  if (!LP.fallen.length || !fight()) return;
-  const t = (typeof game !== "undefined" && game) ? game.time : 0;
-  for (let i = LP.fallen.length - 1; i >= 0; i--) {
-   const rec = LP.fallen[i], G = rec.G;
-   if (!G || !G.parent) { LP.fallen.splice(i, 1); continue; }
-   BOX.setFromObject(G); if (BOX.isEmpty()) continue;
-   for (const f of fighters()) {
-    if (!f || f.out || !f.rig || f.ko || f.downT > 0 || (f.h || 0) > 0.05 || f.postHold || f.perch || f.carried || f.grabbedBy || f.ringOut) continue;
-    f.rig.root.getWorldPosition(WP);
-    if (WP.x < BOX.min.x - 0.3 || WP.x > BOX.max.x + 0.3 || WP.z < BOX.min.z - 0.3 || WP.z > BOX.max.z + 0.3) continue;
-    const big = LP.big.indexOf(keyOf(f)) >= 0;
-    if (big && !f._club && !f.grab && !f.atk && !f.cast && t - (rec.landedAt || 0) > 0.8) { if (pickUp(f, rec)) break; }
-    else if ((f._lpSpeed || 0) > 1.4 && !(f._tripCool > 0) && !f._club && t - (rec.landedAt || 0) > 0.4) trip(f);
-   }
-  }
- }
  function throwClub(f, o) {
   const C = f._club; if (!C || typeof spawnShot !== "function") return;
   const rec = C.rec, G = C.G;
@@ -43469,7 +43367,7 @@ else {
  /* the next bout stands every post back up */
  function restore() {
   try {
-   for (const f of fighters()) if (f) { f._club = null; f._pole = null; f._tripCool = 0; if (f.rig) f.rig._pole = null; }
+   for (const f of fighters()) if (f) { f._club = null; f._pole = null; if (f.rig) f.rig._pole = null; }
    for (const rec of LP.broken) {
     const L = rec.L, G = rec.G;
     if (rec.placed && typeof LOCKHART_SET !== "undefined") { const i = LOCKHART_SET.placed.indexOf(rec.placed); if (i >= 0) LOCKHART_SET.placed.splice(i, 1); }
@@ -43492,8 +43390,7 @@ else {
     }
     if (L) { L._gone = false; L._shake = 0; }
    }
-   for (const rec of LP.falling) { if (rec.G && rec.G.parent) rec.G.parent.remove(rec.G); rec.falling = null; }
-   LP.broken.length = 0; LP.fallen.length = 0; LP.falling.length = 0; LP.shots.length = 0; LP.arts = {};
+   LP.broken.length = 0; LP.fallen.length = 0; LP.shots.length = 0; LP.arts = {};
   } catch (e) { LP.diag.err = String(e); }
  }
  for (const name of ["newGame", "startRoyale"]) {
@@ -43510,9 +43407,6 @@ else {
   try {
    colliders();
    slams(dt || 0);
-   slideTick(dt || 0);
-   fallingTick(dt || 0);
-   fallenTick();
    /* the missiles */
    for (let i = LP.shots.length - 1; i >= 0; i--) {
     const X = LP.shots[i], s = X.s;
@@ -43536,8 +43430,6 @@ else {
    const k = keyOf(f);
    if (f._clubCool > 0) f._clubCool -= dt;
    if (f._clubThrowCool > 0) f._clubThrowCool -= dt;
-   if (f._tripCool > 0) f._tripCool -= dt;
-   { const dx = f.x - (f._lpx === undefined ? f.x : f._lpx), dy = f.y - (f._lpy === undefined ? f.y : f._lpy); f._lpSpeed = Math.hypot(dx, dy) / Math.max(dt || 0.016, 1e-3); f._lpx = f.x; f._lpy = f.y; }
    if (f._poleCool > 0) f._poleCool -= dt;
    balBounce(f, dt);
    /* the club */
@@ -43618,7 +43510,7 @@ else {
   } catch (e) { LP.diag.err = String(e); }
   return r;
  };
- LP.tear = tear; LP.pickUp = pickUp; LP.trip = trip; LP.tearRail = tearRail; LP.nearRail = nearRail; LP.railTargets = railTargets; LP.throwClub = throwClub; LP.restore = restore; LP.nearPost = nearPost; LP.posts = posts;
+ LP.tear = tear; LP.tearRail = tearRail; LP.nearRail = nearRail; LP.railTargets = railTargets; LP.throwClub = throwClub; LP.restore = restore; LP.nearPost = nearPost; LP.posts = posts;
 })();
 </script>
 <!-- THE LAMP POST END -->
@@ -43830,7 +43722,7 @@ else {
    ================================================================== */
 (() => {
  "use strict";
- if (typeof THREE === "undefined" || typeof updateFightCamera !== "function" || typeof camera === "undefined" || typeof startRoyale !== "function") return;
+ if (typeof THREE === "undefined" || typeof updateFightCamera !== "function" || typeof startRoyale !== "function") return;
  const OG = { on: false, state: "off", t: 0, target: null, az: 0.8, el: 0.25, dist: 10, drag: null, fade: 0, diag: { starts: 0, flights: 0, arrivals: 0, deep: 0, err: null } };
  window.LOCKHART_OVERGROUND = OG;
  const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -43867,23 +43759,22 @@ else {
  let rocket = null, flame = null;
  function buildRocket() {
   if (rocket) return rocket;
-  const clay = (hex, rough) => new THREE.MeshStandardMaterial({ color: hex, roughness: rough === undefined ? 0.85 : rough, metalness: 0 });
-  const white = clay(0xeee8dc, 0.8), red = clay(0xc03a30, 0.75), dark = clay(0x2a2622, 0.6);
-  const g = new THREE.Group(), k = 90;                      /* the standalone's rocket, at the set's scale: about 1.8 m tall */
-  const add = (geo, m, y, extra) => { const o = new THREE.Mesh(geo, m); o.position.y = y; o.castShadow = true; if (extra) extra(o); g.add(o); return o; };
-  add(new THREE.CylinderGeometry(0.0022 * k, 0.0024 * k, 0.010 * k, 20), white, 0.005 * k);
-  for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2; add(new THREE.BoxGeometry(0.0006 * k, 0.0035 * k, 0.0028 * k), red, 0.0018 * k, o => { o.position.x = Math.cos(a) * 0.0026 * k; o.position.z = Math.sin(a) * 0.0026 * k; o.rotation.y = -a; }); }
-  add(new THREE.ConeGeometry(0.0016 * k, 0.0016 * k, 14, 1, true), dark, -0.0006 * k, o => { o.rotation.x = Math.PI; });
-  add(new THREE.CylinderGeometry(0.00245 * k, 0.00245 * k, 0.0012 * k, 20), red, 0.0094 * k);
-  add(new THREE.CylinderGeometry(0.0019 * k, 0.0022 * k, 0.006 * k, 20), white, 0.013 * k);
-  add(new THREE.ConeGeometry(0.0019 * k, 0.004 * k, 20), red, 0.018 * k);
-  add(new THREE.SphereGeometry(0.0006 * k, 8, 6), new THREE.MeshBasicMaterial({ color: 0x8ad0ff }), 0.0148 * k, o => { o.position.z = 0.0019 * k; });
-  const cv = document.createElement("canvas"); cv.width = cv.height = 64; const gc = cv.getContext("2d");
-  const gr = gc.createRadialGradient(32, 32, 2, 32, 32, 30); gr.addColorStop(0, "rgba(255,240,200,1)"); gr.addColorStop(0.35, "rgba(255,170,60,0.8)"); gr.addColorStop(1, "rgba(255,90,20,0)");
-  gc.fillStyle = gr; gc.fillRect(0, 0, 64, 64);
-  flame = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), color: 0xffb64a, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
-  flame.scale.set(0.6, 1.4, 1); flame.position.y = -0.55; flame.visible = false; g.add(flame);
-  rocket = g; return g;
+  const g=new THREE.Group();g.name='Hand-sculpted red explorer';
+  const cv=document.createElement('canvas');cv.width=cv.height=128;const ctx=cv.getContext('2d');ctx.fillStyle='#888';ctx.fillRect(0,0,128,128);
+  for(let i=0;i<700;i++){const x=(i*73)%128,y=(i*47)%128;ctx.strokeStyle=i%2?'#999':'#777';ctx.beginPath();ctx.ellipse(x,y,4,2,i*.7,0,Math.PI);ctx.stroke();}
+  const bump=new THREE.CanvasTexture(cv);bump.wrapS=bump.wrapT=THREE.RepeatWrapping;
+  const mat=(color,rough=.78)=>new THREE.MeshStandardMaterial({color,roughness:rough,bumpMap:bump,bumpScale:.014});
+  const red=mat(0xd92d21),yellow=mat(0xffc933),blue=mat(0x71c9e8,.28),dark=mat(0x39343a);
+  const ball=(x,y,z,sx,sy,sz,m)=>{const o=new THREE.Mesh(new THREE.SphereGeometry(1,32,20),m);o.position.set(x,y,z);o.scale.set(sx,sy,sz);o.castShadow=o.receiveShadow=true;g.add(o);return o;};
+  ball(0,.63,0,.73,.43,.61,red);ball(0,.94,-.035,.53,.37,.45,blue);
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(.51,.045,10,48),yellow);rim.rotation.x=Math.PI/2;rim.position.y=.94;rim.scale.y=.88;g.add(rim);
+  for(const side of [-1,1]){ball(side*.79,.5,0,.48,.19,.3,red);ball(side*1.12,.52,.02,.14,.23,.23,yellow);ball(side*.45,.16,.1,.13,.19,.13,red);ball(side*.45,.055,.12,.24,.055,.25,yellow);ball(side*.43,.67,.51,.12,.12,.055,yellow);}
+  ball(0,.65,.57,.13,.075,.07,yellow);ball(0,1.31,-.05,.055,.055,.055,yellow);
+  const antenna=new THREE.Mesh(new THREE.CylinderGeometry(.018,.022,.23,8),red);antenna.position.set(0,1.35,-.05);g.add(antenna);ball(0,1.49,-.05,.065,.065,.065,yellow);
+  ball(0,.33,-.12,.27,.12,.28,dark);
+  const fc=document.createElement('canvas');fc.width=fc.height=64;const f=fc.getContext('2d'),gr=f.createRadialGradient(32,32,1,32,32,30);gr.addColorStop(0,'#fff5b8');gr.addColorStop(.35,'#ffaa30');gr.addColorStop(1,'rgba(255,60,10,0)');f.fillStyle=gr;f.fillRect(0,0,64,64);
+  flame=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(fc),transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));flame.scale.set(.6,1.4,1);flame.position.y=-.55;flame.visible=false;g.add(flame);
+  rocket=g;return g;
  }
 
  /* ---- the destinations ------------------------------------------------ */
@@ -43920,7 +43811,7 @@ else {
   const d = sceneDist(t);
   if (t.earth) {
    const O = (typeof ORRERY !== "undefined") ? ORRERY : null;
-   const bill = ((typeof FIGHTERS !== "undefined" && FIGHTERS.length) ? FIGHTERS : []).filter(f => f && !f.out).map(f => f.name);
+   const bill = []; // The exploration deck carries only the rocket.
    const when = new Date(), T = (when.getTime() - Date.UTC(2000, 0, 1, 12)) / (36525 * 864e5), D = ((297.8502 + 445267.1115 * T) % 360 + 360) % 360;
    const phase = D < 22 || D > 338 ? "new" : D < 68 ? "a waxing crescent" : D < 112 ? "first quarter" : D < 158 ? "waxing gibbous" : D < 202 ? "full" : D < 248 ? "waning gibbous" : D < 292 ? "last quarter" : "a waning crescent";
    c.innerHTML = "<h3>THE EARTH</h3><div class='what'>" + t.what + "</div>" +
@@ -44115,7 +44006,7 @@ else {
    /* no bout card over the sky: this is not a bout */
    setTimeout(() => { try { const bc = document.getElementById("boutCard"); if (bc) bc.classList.remove("on"); } catch (e) {} }, 150);
    document.body.classList.add("overground", "playing");
-   OG.on = true; OG.diag.starts++;
+   OG.on = true; OG.diag.starts++; clearDeckFighters();
    /* the intro flight is theirs; this one starts on the deck */
    try { if (typeof balIntroEnd === "function") balIntroEnd(); BAL.intro = null; } catch (e) {}
    try { if (typeof match !== "undefined" && match) { match.state = "fight"; match.stateT = 0; } } catch (e) {}
@@ -44144,6 +44035,16 @@ else {
    try { showOverlay("title"); overlay.style.display = ""; } catch (e) {}
   } catch (e) { OG.diag.err = String(e); }
  }
+ /* Exploration has no combatants on the launch platform. Story-stage puppets are separate. */
+ function clearDeckFighters() {
+  const deck = new Set([...(typeof FIGHTERS !== 'undefined' ? FIGHTERS : []), typeof player !== 'undefined' ? player : null, typeof foe !== 'undefined' ? foe : null]);
+  for (const f of deck) { if (!f || !f.rig) continue; f.rig.root.visible = false; f.atk = null; f.cast = null; }
+ }
+ OG.clearDeckFighters = clearDeckFighters;
+ const combatRound = updateRoyale;
+ updateRoyale = function () { if (OG.on) { clearDeckFighters(); return; } return combatRound.apply(this, arguments); };
+ const fighterMass = balMass;
+ balMass = function(f) { return OG.on ? 0 : fighterMass.apply(this, arguments); };
  OG.start = start; OG.stop = stop; OG.go = go; OG.tick = tick; OG.enterDeep = enterDeep; OG.leaveDeep = leaveDeep;
  Object.defineProperty(OG, "rocket", { get: () => rocket }); Object.defineProperty(OG, "flame", { get: () => flame });
 
@@ -44151,7 +44052,7 @@ else {
  const priorCam = updateFightCamera;
  updateFightCamera = function (dt, snap) {
   const r = priorCam.apply(this, arguments);
-  if (OG.on) { try { tick(Math.min(0.05, dt || 0.016)); if (typeof balLensDof === "function") balLensDof(0); } catch (e) { OG.diag.err = String(e); } }
+  if (OG.on) { try { clearDeckFighters(); tick(Math.min(0.05, dt || 0.016)); if (typeof balLensDof === "function") balLensDof(0); } catch (e) { OG.diag.err = String(e); } }
   return r;
  };
  if (typeof driveAI === "function") {
@@ -44241,7 +44142,7 @@ else {
 (() => {
  "use strict";
  const OG = window.LOCKHART_OVERGROUND;
- if (!OG || typeof THREE === "undefined" || typeof scene === "undefined" || typeof camera === "undefined") return;
+ if (!OG || typeof THREE === "undefined") return;
  const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
  const ease = u => u * u * (3 - 2 * u);
  const UP = new THREE.Vector3(0, 0, 1);                      /* galactic north is the set's up: the disc lies flat */
@@ -44697,13 +44598,44 @@ else {
   g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(cv);
  }
  let TEX = null;
- function mark(kind, size) {
-  TEX = TEX || knotTexture();
-  const col = kind === "nebula" ? 0xe98aa6 : kind === "planetary" ? 0x9ad8c8 : kind === "cluster" ? 0xfff0c0 : kind === "globular" ? 0xffd9a0 : kind === "galaxy" ? 0xc9c4ff : kind === "remnant" ? 0xff9a7a : kind === "pulsar" ? 0xa0f0ff : kind === "dark" ? 0x443a44 : kind === "bubble" ? 0x6a8cc8 : kind === "hole" ? 0x0a0a10 : kind === "world" ? 0x8ff0b8 : 0xffffff;
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: TEX, color: col, transparent: true, depthWrite: false, blending: kind === "dark" || kind === "hole" ? THREE.NormalBlending : THREE.AdditiveBlending, opacity: kind === "galaxy" ? 0.75 : kind === "bubble" ? 0.12 : 0.85 }));
-  sp.scale.set(size, kind === "galaxy" ? size * 0.45 : size, 1);
-  return sp;
+ function mark(kind,size,name='') {
+  TEX=TEX||knotTexture();
+  const root=new THREE.Group();root.scale.setScalar(size);root.name=name;
+  let seed=2166136261;for(const c of name)seed=Math.imul(seed^c.charCodeAt(0),16777619);
+  const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+  const part=(positions,colors,pointSize,opacity=1)=>{const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));const p=new THREE.Points(geo,new THREE.PointsMaterial({size:pointSize*size,map:TEX,vertexColors:true,transparent:true,opacity,depthWrite:false,fog:false,blending:THREE.AdditiveBlending}));root.add(p);return p;};
+  const pos=[],cols=[],color=new THREE.Color();
+  const dot=(x,y,z,c)=>{pos.push(x,y,z);color.set(c);cols.push(color.r,color.g,color.b);};
+  const galaxy=kind==='galaxy',cluster=kind==='cluster'||kind==='globular',shell=kind==='planetary'||kind==='remnant';
+  const n=cluster?900:galaxy?1500:900;
+  const irregular=/MAGELLANIC/.test(name),elliptical=/M87/.test(name),edge=/SOMBRERO/.test(name),dust=/CENTAURUS/.test(name);
+  for(let i=0;i<n;i++){
+   const a=rand()*Math.PI*2,r=Math.sqrt(rand())*.48;let x,y,z,c;
+   if(galaxy){const arm=i%(/M33/.test(name)?3:2);const t=r*15+arm*Math.PI+(rand()-.5)*.7;x=Math.cos(t)*r;y=Math.sin(t)*r;z=(rand()-.5)*.035;
+    if(elliptical||dust){x=Math.cos(a)*r;y=Math.sin(a)*r*.65;z=(rand()-.5)*.12;}
+    if(irregular){x=(rand()-.5)*.85;y=(rand()-.5)*.5;z=(rand()-.5)*.12;}
+    if(edge)y*=.22;if(dust&&Math.abs(y+x*.35)<.045)continue;
+    c=r<.11?0xffe1a1:i%9===0?0xf28dbb:0xa5bdf7;
+   } else if(cluster){const radius=kind==='globular'?Math.pow(rand(),1.7)*.48:r;const q=rand()*2-1;x=Math.cos(a)*radius*Math.sqrt(1-q*q);y=Math.sin(a)*radius*Math.sqrt(1-q*q);z=q*radius;c=i%7?0xffe3b4:0xaad2ff;}
+   else if(shell){const rr=.3+rand()*.13;x=Math.cos(a)*rr;y=Math.sin(a)*rr*(/DUMBBELL/.test(name)?.55:.85);z=(rand()-.5)*.12;c=i%3?0x79d6df:0xf29575;if(kind==='remnant'){x*=1+.17*Math.sin(a*13);y*=1+.15*Math.cos(a*9);}}
+   else {x=(rand()-.5)*.9;y=(rand()-.5)*.75;z=(rand()-.5)*.23;const density=Math.sin(x*14+Math.sin(y*9))*Math.cos(y*12)+.4;if(rand()>density)continue;
+    if(/ROSETTE|LOOP/.test(name)){x=Math.cos(a)*(.29+rand()*.12);y=Math.sin(a)*(.29+rand()*.12);}
+    if(/TRIFID/.test(name)&&Math.abs(Math.sin(Math.atan2(y,x)*1.5))<.16)continue;
+    if(/EAGLE/.test(name)){const pillar=i%3;x=(pillar-1)*.18+(rand()-.5)*.10;y=rand()*.65-.36+pillar*.055;}
+    c=i%3?0xd581a9:0x74c3df;
+   }
+   dot(x,y,z,c);
+  }
+  if(kind==='dark'){root.add(new THREE.Mesh(new THREE.IcosahedronGeometry(.35,2),new THREE.MeshBasicMaterial({color:0x151124,transparent:true,opacity:.85,fog:false})));}
+  else if(kind==='bubble'){root.add(new THREE.Mesh(new THREE.SphereGeometry(.48,24,16),new THREE.MeshBasicMaterial({color:0x638fd2,wireframe:true,transparent:true,opacity:.08,fog:false})));}
+  else {part(pos,cols,cluster?.014:galaxy?.025:.065,cluster?1:.85);if(!cluster){const haze=part(pos,cols,galaxy?.095:.16,.13);haze.userData.cloudLayer=true;}}
+  if(galaxy||shell||kind==='pulsar'){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:TEX,color:shell?0xaadeff:0xffe8ba,transparent:true,depthWrite:false,fog:false}));sp.scale.setScalar(kind==='pulsar'?.13:.08);root.add(sp);}
+  if(kind==='pulsar'||/M87/.test(name)){const jets=new THREE.Group();for(const sign of [-1,1]){const jet=new THREE.Mesh(new THREE.ConeGeometry(.07,.75,12,1,true),new THREE.MeshBasicMaterial({color:0x7bccff,transparent:true,opacity:.45,side:THREE.DoubleSide,depthWrite:false,fog:false}));jet.position.y=sign*.4;jet.rotation.z=sign<0?Math.PI:0;jets.add(jet);}root.add(jets);root.userData.jets=jets;}
+  root.rotation.set(.35,galaxy?.3:0,rand()*.8);root.userData.detailKind=kind;root.userData.baseRotation=root.rotation.z;
+  return root;
  }
+ function animateDestinations(){const t=Math.floor(((typeof game!=='undefined'&&game)?game.time:0)*12)/12;for(const d of AT.deep||[]){const o=d.sprite;if(!o||!o.userData.detailKind)continue;if(o.userData.jets)o.userData.jets.rotation.z=t*.8;o.rotation.z=o.userData.baseRotation+Math.sin(t*.12)*.025;}}
+
  function label(main, note, p, sc) { if (typeof atlasLabel !== "function") return null; try { const l = atlasLabel(main, note, sc || 0.5); l.position.copy(p); return l; } catch (e) { return null; } }
  function buildSky() {
   if (AT.built || !J.group) return;
@@ -44732,7 +44664,7 @@ else {
     if (kind === "bubble") { p = new THREE.Vector3(0, 0, 0); }
     else p = J.toScene(galLy(ra, dec, ly));
     const size = kind === "bubble" ? J.rs(500) * 2 : kind === "galaxy" ? (ly > 1e6 ? 60 : 30) : kind === "cluster" ? 4 : kind === "globular" ? 5 : kind === "planetary" ? 2.5 : kind === "pulsar" ? 2 : kind === "dark" ? 8 : 7;
-    const sp = mark(kind, size); sp.position.copy(p); grp("deep").add(sp);
+    const sp = mark(kind, size, name); sp.position.copy(p); grp("deep").add(sp);
     if (kind !== "bubble") { const l = label(name, kind + " · " + fmtLy(ly), p.clone().addScaledVector(UP, size * 0.35 + 1), 0.5); if (l) grp("deep").add(l); }
     AT.deep.push({ name, kind, p, ly, note, sprite: sp }); AT.diag.deep++;
    } catch (e) { AT.diag.err = String(e); }
@@ -44864,6 +44796,7 @@ else {
  J.tick = function (dt) {
   const F = J.flight;
   const r = priorTick.apply(this, arguments);
+  animateDestinations();
   if (F && F.mark && !J.flight) {
    const h = F.mark;
    J.card({ title: h.name, what: (h.kind || "a star with planets") + " · " + h.note, rows: [["really, from the sun", fmtLy(h.ly)], ["its light takes", h.ly >= 1e6 ? (h.ly / 1e6).toFixed(1) + " million years" : h.ly >= 1000 ? Math.round(h.ly).toLocaleString("en-US") + " years" : h.ly.toFixed(0) + " years"]] });
@@ -45835,610 +45768,77 @@ else {
 })();
 </script>
 <!-- THE TALLY END -->
-<!-- THE TAPE, TAKE TWO START -->
-<script>
-/* ==================================================================
-   THE TAPE, TAKE TWO
-   Two complaints: the tape had no voices on it, and the camera hung.
-   THE VOICES. Every line is spoken by the browser's own synthesiser,
-   which does not pass through the mixer, so a tap on the mixer can
-   never hear it. Two answers, both here. C now asks the browser for
-   the machine's own sound once per session (pick the whole screen and
-   tick SHARE SYSTEM AUDIO; on a Mac, this tab); if it is given, the
-   lines are on the tape exactly as spoken. If the dialog is declined,
-   or the machine cannot, every line is ALSO said a second time by the
-   character's throat -- the same formant voice the game uses when
-   there is no synthesiser -- into a bus that only the tape can hear,
-   timed with the mouth. The room hears the synthesiser; the tape
-   hears a voice. SHIFT+C skips the dialog and takes the throat.
-   THE HANG. Three causes. The recorder was fed one frame per exposure
-   and starved whenever the picture stopped (the end card, a pause, a
-   hitstop), and a starved recorder will not stop; now it is fed a
-   held frame four times a second while nothing moves. The permission
-   dialog opened behind a fullscreen game and looked like a freeze;
-   fullscreen is left before asking, and the ask times out. And a stop
-   that never came back is now given three seconds, then finished by
-   hand from what was already on the tape.
-   ================================================================== */
-(() => {
- "use strict";
- if (typeof CLIP === "undefined" || typeof clipStart !== "function" || typeof clipStop !== "function") return;
- const T2 = { on: true, track: null, asked: false, throat: true, diag: { asks: 0, granted: 0, throatLines: 0, keepAlive: 0, forcedStops: 0, err: null } };
- window.LOCKHART_TAPE2 = T2;
- const banner = (a, b, t) => { try { if (typeof setBanner === "function") setBanner(a, b, t || 2.6); } catch (e) {} };
- /* ---- the machine's own sound ------------------------------------------- */
- function askSound() {
-  return new Promise(res => {
-   let done = false; const fin = v => { if (!done) { done = true; res(v); } };
-   try {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) return fin(null);
-    const leave = document.fullscreenElement && document.exitFullscreen ? document.exitFullscreen().catch(() => {}) : Promise.resolve();
-    leave.then(() => navigator.mediaDevices.getDisplayMedia({
-     video: true, audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
-     systemAudio: "include", selfBrowserSurface: "include", surfaceSwitching: "exclude", preferCurrentTab: false
-    })).then(ds => {
-     const at = ds.getAudioTracks()[0] || null;
-     ds.getVideoTracks().forEach(t => t.stop());
-     if (at) at.addEventListener("ended", () => { if (T2.track === at) T2.track = null; });
-     fin(at);
-    }).catch(() => fin(null));
-    setTimeout(() => fin(null), 25000);
-   } catch (e) { fin(null); }
-  });
- }
- /* the tape's ear: the recorder listens to this, the room does not */
- let bus = null;
- function tapeBus() {
-  try {
-   if (!A || !A.ctx || !A.ctx.createMediaStreamDestination) return null;
-   if (!CLIP.dest) { CLIP.dest = A.ctx.createMediaStreamDestination(); if (A.master) A.master.connect(CLIP.dest); }
-   if (!bus) { bus = A.ctx.createGain(); bus.gain.value = 1.0; bus.connect(CLIP.dest); }
-   return bus;
-  } catch (e) { T2.diag.err = String(e); return null; }
- }
- /* the recorder's stream: the machine's sound when we have it */
- const priorStream = clipStream;
- clipStream = function () {
-  const st = priorStream.apply(this, arguments);
-  try {
-   if (st && T2.track && T2.track.readyState === "live") {
-    /* the machine's sound already carries the mixer: the mixer's own track comes off */
-    for (const t of st.getAudioTracks()) if (t !== T2.track) st.removeTrack(t);
-    st.addTrack(T2.track);
-   } else tapeBus();
-  } catch (e) { T2.diag.err = String(e); }
-  return st;
- };
- /* every line, said again by the throat, for the tape only */
- if (typeof A !== "undefined" && typeof A.say === "function") {
-  const priorSay = A.say;
-  A.say = function (who, text, vol) {
-   const spoke = priorSay.apply(this, arguments);
-   try {
-    if (!T2.on || !T2.throat || !CLIP.on || !spoke) return spoke;             /* no synthesiser: the throat is already on the mixer */
-    if (T2.track && T2.track.readyState === "live") return spoke;            /* the real voice is on the tape */
-    const b = tapeBus(); if (!b || typeof A.segment !== "function" || typeof A.talk !== "function") return spoke;
-    const segs = A.segment(text); let wait = 0;
-    for (const seg of segs) {
-     if (seg.bleep) { wait += seg.bleep + 0.07; continue; }                 /* the censor tone is on the mixer already */
-     const words = seg.say.split(/\s+/).length;
-     setTimeout(() => {
-      if (!CLIP.on) return;
-      const vx = A.vox; A.vox = () => b;
-      try { if (A.SYNTH_FALLBACK && A.SYNTH_FALLBACK[who] && typeof A.monster === "function") A.monster(seg.say, vol || 0.6); else A.talk(who, Math.min(7, 2 + words), vol || 0.5); }
-      catch (e) { T2.diag.err = String(e); }
-      A.vox = vx;
-      T2.diag.throatLines++;
-     }, wait * 1000);
-     wait += 0.22 + words * 0.30;
-    }
-   } catch (e) { T2.diag.err = String(e); }
-   return spoke;
-  };
- }
- /* ---- the hang ------------------------------------------------------------- */
- /* a held frame while nothing moves, so the recorder never starves */
- let lastFeed = 0;
- const sheet = () => (typeof LOCKHART_TAPE !== "undefined" && LOCKHART_TAPE.sheet) ? LOCKHART_TAPE.sheet() : null;
- function feed() {
-  try {
-   const st = CLIP.rec && CLIP.rec.stream; if (!st) return;
-   const vt = st.getVideoTracks()[0]; if (vt && typeof vt.requestFrame === "function") { vt.requestFrame(); T2.diag.keepAlive++; }
-  } catch (e) {}
- }
- setInterval(() => {
-  if (!CLIP.on || !CLIP.rec || CLIP.rec.state !== "recording") return;
-  const at = (typeof filmDrawAt !== "undefined") ? filmDrawAt : 0;
-  if (at !== lastFeed) { lastFeed = at; return; }
-  feed();
- }, 250);
- /* a stop that does not come back is finished by hand */
- const priorStop = clipStop;
- clipStop = function () {
-  const rec = CLIP.rec;
-  feed();
-  const r = priorStop.apply(this, arguments);
-  try {
-   if (!rec) return r;
-   setTimeout(() => {
-    if (!CLIP.on || CLIP.rec !== rec) return;
-    T2.diag.forcedStops++;
-    try { if (rec.state !== "inactive") rec.stop(); } catch (e) {}
-    setTimeout(() => { if (CLIP.on && CLIP.rec === rec && typeof rec.onstop === "function") { try { rec.onstop(); } catch (e) { CLIP.on = false; } } }, 1500);
-   }, 3000);
-  } catch (e) { T2.diag.err = String(e); }
-  return r;
- };
- /* ---- C: the camera, with the machine's sound if it will give it ------------ */
- const priorToggle = clipToggle;
- clipToggle = function () {
-  if (CLIP.on || CLIP.armed || !T2.on) return priorToggle.apply(this, arguments);
-  if (T2.asked || (T2.track && T2.track.readyState === "live")) return priorToggle.apply(this, arguments);
-  T2.asked = true; T2.diag.asks++;
-  banner("THE TAPE WANTS THE SOUND", "pick ENTIRE SCREEN and tick SHARE SYSTEM AUDIO · or cancel for the throat", 5);
-  askSound().then(track => {
-   T2.track = track; if (track) T2.diag.granted++;
-   banner(track ? "CAMERA ON — WITH VOICES" : "CAMERA ON — THROAT VOICES", track ? "every fight records from the top" : "the lines go on the tape in the character's own throat", 3);
-   priorToggle.apply(this, arguments);
-  });
- };
- /* SHIFT+C: no dialog, the throat */
- window.addEventListener("keydown", e => {
-  if (e.code !== "KeyC" || !e.shiftKey || e.repeat || e.ctrlKey || e.metaKey) return;
-  e.preventDefault(); e.stopImmediatePropagation();
-  if (CLIP.on || CLIP.armed) { priorToggle(); return; }
-  T2.asked = true; banner("CAMERA ON — THROAT VOICES", "every fight records from the top", 3);
-  priorToggle();
- }, true);
- T2.ask = () => { T2.asked = false; };
- T2.forget = () => { if (T2.track) { try { T2.track.stop(); } catch (e) {} } T2.track = null; T2.asked = false; };
-})();
-</script>
-<!-- THE TAPE, TAKE TWO END -->
-<!-- THE FLOOR START -->
-<script>
-/* ==================================================================
-   THE FLOOR
-   On the Balance every body is put on the board just before the
-   picture: the standing by their feet, the fallen by the lowest thing
-   on them. That pass read a few sampled points of the foot meshes,
-   which is right for a man with feet and wrong for everyone without:
-   the snowman's hidden feet stood on the board while his snow floated,
-   the droid sat down through it on its wheels, the Toy Rex's belly and
-   tail went under, and a fallen Santa's sack and beard went a foot
-   through the boards. Now, one owner and one rule: nothing you can see
-   goes under the board, and the lowest thing you can see touches it.
-   Standing, that is the lower of the feet and the body; fallen, it is
-   the body laid flush along the board's tilt. Every vertex is read,
-   not a sample, and only on an exposure, so nothing shivers between.
-   ================================================================== */
-(() => {
- "use strict";
- if (typeof balGroundPass !== "function" || typeof BAL === "undefined" || typeof THREE === "undefined") return;
- const FL = { on: true, diag: { passes: 0, fixes: 0, err: null } };
- window.LOCKHART_FLOOR = FL;
- const O = new THREE.Vector3(), N = new THREE.Vector3(), Q = new THREE.Quaternion(), QI = new THREE.Quaternion(), V = new THREE.Vector3();
- const prior = balGroundPass;
- function shown(m, top) { for (let o = m; o && o !== top; o = o.parent) if (!o.visible) return false; return true; }
- function degenerate(m) { const e = m.matrixWorld.elements; return Math.min(Math.hypot(e[0], e[1], e[2]), Math.hypot(e[4], e[5], e[6]), Math.hypot(e[8], e[9], e[10])) < 1e-3; }
- /* the lowest vertex under a subtree, measured against the board's surface under that very vertex */
- function lowestOf(root, top, step) {
-  let low = Infinity;
-  root.traverse(m => {
-   if (!m.isMesh || m.isSprite || !m.geometry || !m.geometry.attributes.position) return;
-   if (m.userData && m.userData.noGround) return;
-   if (!shown(m, top) || degenerate(m)) return;
-   const p = m.geometry.attributes.position, c = p.count, e = m.matrixWorld;
-   for (let i = 0; i < c; i += step) {
-    V.fromBufferAttribute(p, i).applyMatrix4(e);
-    const surface = O.y - (N.x * (V.x - O.x) + N.z * (V.z - O.z)) / N.y;
-    const d = V.y - surface; if (d < low) low = d;
-   }
-  });
-  return low;
- }
- function pass() {
-  if (!FL.on || !BAL.on || !BAL.group) return;
-  try {
-   BAL.group.updateMatrixWorld(true);
-   O.setFromMatrixPosition(BAL.group.matrixWorld); BAL.group.getWorldQuaternion(Q); N.set(0, 1, 0).applyQuaternion(Q);
-   const list = (typeof royaleOn === "function" && royaleOn()) ? FIGHTERS : [player, foe];
-   const stepNow = typeof clayStep === "undefined" || clayStep;
-   for (const f of list) {
-    if (!f || !f.rig) continue;
-    const rig = f.rig, R = rig.root;
-    if (!stepNow && rig._flYafter !== undefined && R.position.y === rig._flYafter && (!rig._flQafter || R.quaternion.equals(rig._flQafter))) continue;
-    if (rig._flYafter !== undefined && R.position.y === rig._flYafter) R.position.y -= rig._flDy;
-    if (rig._flQafter && R.quaternion.equals(rig._flQafter)) R.quaternion.premultiply(QI.copy(rig._flQ).invert());
-    rig._flDy = 0; rig._flYafter = undefined; rig._flQafter = null;
-    if (!R.visible || f.ringOut || (f.postHold && (f.postHold.rail || !f.postHold.L)) || f.carried || f.grabbedBy || f.perch || f.web || f.stretcher || rig.hovers || f.voice === "ghost") continue;
-    if (f._death && !f._deathDone) continue;
-    if ((f.h || 0) > 0.05) continue;
-    const lying = !!(f.ko || f.out || f.downT > 0 || f.hp <= 0);
-    if (lying) { rig._flQ = (rig._flQ || new THREE.Quaternion()).copy(Q); R.quaternion.premultiply(rig._flQ); }
-    R.updateMatrixWorld(true);
-    let low;
-    if (lying) low = lowestOf(R, R.parent, 1);
-    else {
-     /* the feet, every vertex; and the body, coarsely, in case something hangs below them */
-     const feet = rig.chair ? rig.chair.wheels : (rig.legs || []).filter(l => l && l.ankle).map(l => l.ankle);
-     let lf = Infinity; for (const a of feet) lf = Math.min(lf, lowestOf(a, R.parent, 1));
-     const lb = lowestOf(R, R.parent, 3);
-     low = Math.min(lf, lb);
-    }
-    if (!isFinite(low) || low > 2.5 || low < -2.5) { if (lying) { R.quaternion.premultiply(QI.copy(rig._flQ).invert()); rig._flQ = null; } continue; }
-    R.position.y -= low;
-    rig._flDy = -low; rig._flYafter = R.position.y;
-    if (lying) rig._flQafter = R.quaternion.clone();
-    if (Math.abs(low) > 0.004) FL.diag.fixes++;
-   }
-   FL.diag.passes++;
-  } catch (e) { FL.diag.err = String(e); }
- }
- /* the base pass ran at the top of the draw, before the ragdoll and the
-    special rigs had written this exposure's pose, so a tumbling body was
-    laid by last exposure's shape and then moved. The pass runs here
-    instead: on the way into the renderer, once per exposure, when every
-    pose is final. */
- balGroundPass = function () { if (!FL.on || !BAL.on || !BAL.group) return prior.apply(this, arguments); };
- if (typeof renderer !== "undefined" && renderer && typeof renderer.render === "function") {
-  const priorRender = renderer.render.bind(renderer); let lastAt = null;
-  renderer.render = function (sc, cam) {
-   try {
-    if (FL.on && BAL.on && BAL.group && sc === scene) {
-     const at = (typeof filmDrawAt !== "undefined") ? filmDrawAt : performance.now();
-     if (at !== lastAt) { lastAt = at; pass(); }
-    }
-   } catch (e) { FL.diag.err = String(e); }
-   return priorRender(sc, cam);
-  };
- }
- FL.pass = pass;
-})();
-</script>
-<!-- THE FLOOR END -->
-<!-- THE BOOK START -->
-<script>
-/* ==================================================================
-   THE BOOK
-   A TOURNAMENT kept its own book: the whole roster, Agent Lockhart on
-   the first line whatever the card said, and the casting table was
-   ignored. Now the card is the book. Put two or more on the card and
-   the tournament is fought among them; leave YOUR slot empty and
-   Lockhart is on it, fill it and he is not. Whoever is in your slot
-   is the one the book follows, is dealt every bout while a person
-   holds the pad, and is the one whose night ends the tournament.
-   ================================================================== */
-(() => {
- "use strict";
- if (typeof startTourney !== "function" || typeof tourneyHero !== "function") return;
- const BK = { on: true, diag: { books: 0, fromCard: 0, err: null } };
- window.LOCKHART_BOOK = BK;
- const eligible = i => Number.isInteger(i) && i >= 0 && i < ROSTER.length && (typeof inEdition !== "function" || inEdition(i)) && (typeof isParked !== "function" || !isParked(i));
- function card() {
-  try {
-   if (typeof LOCKHART_SLOTS === "undefined") return null;
-   const n = Math.min(40, (typeof ROYALE_N === "number") ? ROYALE_N : 6);
-   const list = LOCKHART_SLOTS.list().slice(0, n);
-   const keys = list.filter(eligible).filter((v, k, a) => a.indexOf(v) === k);
-   const mine = LOCKHART_SLOTS.mine();
-   return { keys: keys, lockhart: list[mine] === null || list[mine] === undefined, sig: keys.join(",") + "|" + (list[mine] === null || list[mine] === undefined ? "L" : "") + "|" + (typeof PLAY_AS === "number" ? PLAY_AS : -1) };
-  } catch (e) { return null; }
- }
- const priorStart = startTourney;
- startTourney = function () {
-  const T = priorStart.apply(this, arguments);
-  try {
-   BK.diag.books++;
-   const C = card();
-   if (BK.on && T && C && C.keys.length >= 2) {
-    const keep = new Set(C.keys);
-    /* the first line of the book is whoever is in YOUR slot -- Lockhart
-       when it is empty, and the fighter you chose when it is not (the game
-       keeps that entry out of the draw and puts you on the deck as them) */
-    T.field = T.field.filter(e => e.hero || keep.has(e.key));
-    T.fromCard = true; BK.diag.fromCard++;
-   }
-   if (T) T.cardSig = C ? C.sig : "";
-  } catch (e) { BK.diag.err = String(e); }
-  return T;
- };
- /* a book is kept until somebody takes it -- but a new card is a new
-    book: change the card between bouts and the old one is closed */
- if (typeof newGame === "function") {
-  const priorNew = newGame;
-  newGame = function () {
-   try {
-    const fmt = (typeof LOCKHART_MODES !== "undefined" && LOCKHART_MODES.format) ? LOCKHART_MODES.format() : "single";   /* FORMAT itself is private to the modes */
-    if (BK.on && fmt === "tourney" && typeof TOURNEY !== "undefined" && TOURNEY && !TOURNEY.champion) {
-     const C = card(); const sig = C ? C.sig : "";
-     if (TOURNEY.cardSig !== undefined && TOURNEY.cardSig !== sig) { TOURNEY = null; BK.diag.reopened = (BK.diag.reopened || 0) + 1; }
-    }
-   } catch (e) { BK.diag.err = String(e); }
-   return priorNew.apply(this, arguments);
-  };
- }
- /* ---- the counts come down --------------------------------------------
-    A series that had been taken kept its tally: the next card, dealt from
-    the title, went on counting from three. And a book or a series left
-    unfinished when you quit to the title was still there for the next
-    card. A card dealt from the title after a series is taken starts the
-    tally at nought; QUIT closes the book and the series both. */
- if (typeof newGame === "function") {
-  const priorNew2 = newGame;
-  newGame = function () {
-   try {
-    const S = (typeof LOCKHART_SERIES !== "undefined") ? LOCKHART_SERIES : null;
-    if (S && S.on && S.champion) { S.start(S.target || 3); BK.diag.seriesReset = (BK.diag.seriesReset || 0) + 1; }
-   } catch (e) {}
-   return priorNew2.apply(this, arguments);
-  };
- }
- if (typeof quitToTitle === "function") {
-  const priorQuit = quitToTitle;
-  quitToTitle = function () {
-   try {
-    const S = (typeof LOCKHART_SERIES !== "undefined") ? LOCKHART_SERIES : null;
-    if (S && S.on) { S.stop(); S.wins = Object.create(null); S.champion = null; S.round = 0; }
-    if (typeof TOURNEY !== "undefined" && TOURNEY) { TOURNEY = null; BK.diag.booksClosed = (BK.diag.booksClosed || 0) + 1; }
-   } catch (e) {}
-   return priorQuit.apply(this, arguments);
-  };
- }
- BK.card = card;
-})();
-</script>
-<!-- THE BOOK END -->
-<!-- THE SOFA START -->
-<script>
-/* ==================================================================
-   THE SOFA
-   A controller already fought, paused, and worked the title card. It
-   could not work the gallery, the character page, or the sky: those
-   are not on the card, so the highlight had nothing to land on and
-   the stick moved chips it could not see. Now player one's pad drives
-   all of it. In the gallery the stick moves between the faces, the
-   slots and the buttons, A presses whatever is under it (a face opens
-   its page, a plus casts it, a number takes the slot), B closes the
-   page or the gallery. Over the sky the stick and A pick a
-   destination from the list, the right stick looks round, the
-   triggers close in and back out, and B is ESC: home, then the ring.
-   ================================================================== */
-(() => {
- "use strict";
- if (typeof navItems !== "function" || typeof pollMenuPad !== "function" || typeof pollGamepads !== "function" || typeof GP === "undefined") return;
- const SF = { on: true, diag: { presses: 0, backs: 0, looks: 0 } };
- window.LOCKHART_SOFA = SF;
- const vis = e => !!e && e.offsetParent !== null && !e.disabled;
- const shown = id => { const el = document.getElementById(id); return el && getComputedStyle(el).display !== "none" ? el : null; };
- const OG = () => (typeof LOCKHART_OVERGROUND !== "undefined") ? LOCKHART_OVERGROUND : null;
- const priorNav = navItems;
- navItems = function () {
-  try {
-   if (!SF.on) return priorNav.apply(this, arguments);
-   const P = shown("galPage");
-   if (P) return [...P.querySelectorAll("button")].filter(vis);
-   const G = shown("gallery");
-   if (G && typeof GAL_OPEN !== "undefined" && GAL_OPEN) {
-    const seen = new Set(), out = [];
-    for (const e of G.querySelectorAll(".castSlot, [data-mine], [data-add], .galShot[data-page], [data-filter], [data-format], [data-close], [data-slotclear], [data-series], [data-edition], #fePickBtn, #feOnlyBtn, button")) { if (vis(e) && !seen.has(e)) { seen.add(e); out.push(e); } }
-    return out;
-   }
-   const og = OG();
-   if (og && og.on) {
-    const out = [];
-    for (const e of document.querySelectorAll("#ogList button, #ogCard button")) if (vis(e)) out.push(e);
-    return out;
-   }
-  } catch (e) {}
-  return priorNav.apply(this, arguments);
- };
- const priorMenu = pollMenuPad;
- pollMenuPad = function (g) {
-  const aBefore = NAV.a, bBefore = NAV.b, el = NAV.el;
-  const r = priorMenu.apply(this, arguments);
-  try {
-   const bt = g.buttons || [], down = i => !!(bt[i] && (bt[i].pressed || bt[i].value > 0.5));
-   const a = down(GP.A), b = down(GP.B);
-   const og = OG();
-   /* the sky's list answers to pointerdown, not click */
-   if (a && !aBefore && el && og && og.on && el.closest && el.closest("#ogPanel")) { el.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true })); SF.diag.presses++; }
-   if (b && !bBefore) {
-    if (shown("galPage")) { if (typeof galPageClose === "function") galPageClose(); SF.diag.backs++; }
-    else if (shown("gallery") && typeof GAL_OPEN !== "undefined" && GAL_OPEN) { if (typeof closeGallery === "function") closeGallery(); SF.diag.backs++; }
-    else if (og && og.on) { window.dispatchEvent(new KeyboardEvent("keydown", { code: "Escape", key: "Escape", bubbles: true })); SF.diag.backs++; }
-   }
-  } catch (e) {}
-  return r;
- };
- /* BACK (the small left button) puts you in his shoes and takes you out again */
- let backWas = false;
- function backButton() {
-  try {
-   if (!navigator.getGamepads) return;
-   const list = navigator.getGamepads(); let g = null; for (let i = 0; list && i < list.length; i++) if (list[i] && list[i].connected) { g = list[i]; break; }
-   const bt = g && g.buttons || [], b = bt[GP.BACK], down = !!(b && (b.pressed || b.value > 0.5));
-   if (down && !backWas && typeof povSet === "function" && typeof started !== "undefined" && started && !paused) { povSet(!POV.on); SF.diag.pov = (SF.diag.pov || 0) + 1; }
-   backWas = down;
-  } catch (e) {}
- }
- /* the card's note: everything the pad does */
- if (typeof gamepadNote === "function") {
-  gamepadNote = function () {
-   if (!GP.count) return "";
-   return "<p style='color:#7de3ff'>" + GP.count + (GP.count === 1 ? " controller" : " controllers") + " connected &mdash; " +
-    "<k>A</k> swing &nbsp; <k>B</k> heavy &nbsp; <k>X</k> jump &nbsp; <k>LB</k> sidestep &nbsp; <k>RB</k> grab, then pull the stick back to throw him behind you &nbsp; " +
-    "<k>RT</k> power &nbsp; <k>LT</k> second power &nbsp; <k>Y</k> resonance on a full meter &nbsp; <k>BACK</k> in his shoes &nbsp; <k>START</k> pause</p>";
-  };
- }
- /* over the sky: the right stick looks round, the triggers close in and back out */
- const priorPoll = pollGamepads;
- pollGamepads = function () {
-  const r = priorPoll.apply(this, arguments);
-  backButton();
-  try {
-   const og = OG(); if (!SF.on || !og || !og.on || !navigator.getGamepads) return r;
-   const list = navigator.getGamepads(); let g = null; for (let i = 0; list && i < list.length; i++) if (list[i] && list[i].connected) { g = list[i]; break; }
-   if (!g) return r;
-   const ax = g.axes || [], bt = g.buttons || [];
-   const rx = ax.length > 2 ? ax[2] : 0, ry = ax.length > 3 ? ax[3] : 0;
-   const val = i => (bt[i] ? (bt[i].value || (bt[i].pressed ? 1 : 0)) : 0);
-   const zoom = val(GP.RT) - val(GP.LT);
-   const clamp = (v, lo, hi) => v < lo ? lo : v > hi ? hi : v;
-   const J = og.journey;
-   if (Math.abs(rx) > GP.DEAD || Math.abs(ry) > GP.DEAD) {
-    if (J && J.on && J.hold) { J.az -= rx * 0.035; J.el = clamp(J.el + ry * 0.025, -1.2, 1.2); }
-    else if (og.state === "hold" || og.state === "deck") { og.az -= rx * 0.035; og.el = clamp(og.el + ry * 0.025, -0.6, 1.3); }
-    SF.diag.looks++;
-   }
-   if (Math.abs(zoom) > 0.1) {
-    if (J && J.on && J.hold) J.dist = clamp(J.dist * (1 - zoom * 0.02), 2, 400);
-    else if (og.state === "hold" || og.state === "deck") og.dist = clamp(og.dist * (1 - zoom * 0.02), 4, 900);
-   }
-  } catch (e) {}
-  return r;
- };
-})();
-</script>
-<!-- THE SOFA END -->
-<!-- THE STEP ASIDE START -->
-<script>
-/* ==================================================================
-   THE STEP ASIDE
-   A sidestep was one pose, blended in and out, the same whichever way
-   the man was going: a scurry that read as a stumble. A step aside is
-   a lateral lunge, and it has two beats. THE PLANT: the lead foot goes
-   out wide, the lead knee takes the weight, the trailing leg drives,
-   the hips go over the lead foot and the ribs lean into the travel,
-   the guard stays up with the trailing arm across for balance. THE
-   CLOSE: the trailing foot slides in under him, the hips level, the
-   ribs come back upright, and he settles square, still facing the man
-   he is fighting. Walking sideways gets the same lean and guard, so a
-   shuffle round a man looks like a boxer's, not a crab's. The rigs are
-   built by hand and their joints do not all bend the same way, so the
-   first time a rig steps the module checks which way its own hips and
-   thighs went and keeps the sign that leaned into the step.
-   ================================================================== */
-(() => {
- "use strict";
- if (typeof animateRig !== "function" || typeof LOCKHART_MOCAP === "undefined" || typeof THREE === "undefined") return;
- const SS = { on: true, reach: 0.32, knee: 26, leanReach: 0.24, arms: true, shuffleReach: 0.12, diag: { steps: 0, shuffles: 0, calibrated: 0, err: null } };
- window.LOCKHART_SIDESTEP = SS;
- const M = LOCKHART_MOCAP, D2R = Math.PI / 180;
- const Q = new THREE.Quaternion(), QN = new THREE.Quaternion(), E = new THREE.Euler(), W1 = new THREE.Vector3(), W2 = new THREE.Vector3(), W3 = new THREE.Vector3();
- const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
- const smooth = (a, b, x) => { const u = clamp((x - a) / (b - a), 0, 1); return u * u * (3 - 2 * u); };
- function turn(rig, key, x, y, z, w) { const t = M.joint(rig, key); if (!t || w <= 0) return; Q.setFromEuler(E.set(x * D2R * w, y * D2R * w, z * D2R * w, "ZXY")); QN.copy(t.quaternion).multiply(Q); t.quaternion.copy(QN); }
- const fighterOf = rig => (typeof fighterOfRig === "function") ? fighterOfRig(rig) : null;
- /* Which way is "out" for each of this rig's thighs, and "over" for its
-    ribs, and how far a degree takes them: measured once per rig, in both
-    directions, against the rig's own right. The rigs stand side-on with
-    the hips yawed, so a thigh's own axis is nowhere near the world's
-    sideways and the two legs do not answer alike. */
- const PROBES = [["lL0", 30, r => r.legs && r.legs[0] && (r.legs[0].ankle || r.legs[0].knee)], ["lR0", 30, r => r.legs && r.legs[1] && (r.legs[1].ankle || r.legs[1].knee)], ["abdomen", 20, r => M.joint(r, "head")]];
- function calibrate(rig) {
-  if (rig._ssCal) return rig._ssCal;
-  const cal = {};
-  try {
-   rig.root.updateMatrixWorld(true);
-   const right = new THREE.Vector3(1, 0, 0).applyQuaternion(rig.root.getWorldQuaternion(new THREE.Quaternion()));
-   for (const [key, deg, partOf] of PROBES) {
-    const j = M.joint(rig, key), part = partOf(rig); if (!j || !part) continue;
-    const q0 = j.quaternion.clone(); part.getWorldPosition(W1);
-    turn(rig, key, 0, 0, deg, 1); rig.root.updateMatrixWorld(true); part.getWorldPosition(W2); j.quaternion.copy(q0);
-    turn(rig, key, 0, 0, -deg, 1); rig.root.updateMatrixWorld(true); part.getWorldPosition(W3); j.quaternion.copy(q0);
-    cal[key] = { plus: W2.sub(W1).dot(right) / deg, minus: W3.sub(W1).dot(right) / deg };   /* metres to the right, per degree, each way */
-   }
-   rig.root.updateMatrixWorld(true);
-   SS.diag.calibrated++;
-  } catch (e) { SS.diag.err = String(e); }
-  return (rig._ssCal = cal);
- }
- /* the z turn, in degrees, that takes this joint's part `want` metres to the right (negative: to the left) */
- function zFor(cal, key, want, lo, hi) {
-  const c = cal[key]; if (!c) return 0;
-  const sgn = want >= 0 ? 1 : -1;
-  const cand = [];
-  if (c.plus * sgn > 1e-4) cand.push([1, c.plus * sgn]);
-  if (c.minus * sgn > 1e-4) cand.push([-1, c.minus * sgn]);
-  if (!cand.length) return 0;
-  cand.sort((a, b) => b[1] - a[1]);
-  return cand[0][0] * clamp(Math.abs(want) / cand[0][1], lo, hi);
- }
- const prior = animateRig;
- animateRig = function (rig, a) {
-  /* a step aside is built on the stance, not on the old roll pose (which
-     leaned one way whichever way he went and fought the left-hand step) */
-  let stepSide = 0, f = null;
-  if (SS.on && rig && a && rig.root && a.roll > 0 && !a.flip && !(a.down > 0.01) && !a.ko) {
-   f = fighterOf(rig);
-   if (f && typeof f.rollDir === "number") { const rel = (typeof angDiff === "function") ? angDiff(f.rollDir, f.ang) : 0; const side = Math.sin(rel); if (Math.abs(side) > 0.45) stepSide = side; }
-  }
-  const r = stepSide ? prior.call(this, rig, Object.assign({}, a, { roll: 0, stride: 0 })) : prior.apply(this, arguments);
-  if (!SS.on || !rig || !a || !rig.root || a.down > 0.01 || a.ko) return r;
-  try {
-   if (!f) f = fighterOf(rig);
-   /* ---- the step aside: a lateral lunge in two beats ---- */
-   if (stepSide) {
-    const side = stepSide;
-    {
-     const cal = calibrate(rig), s = side > 0 ? 1 : -1;          /* +1: to his right */
-     const t = clamp(a.roll, 0, 1);
-     const plant = Math.sin(Math.PI * clamp(t / 0.9, 0, 1));    /* out, then back square */
-     const drive = smooth(0.0, 0.3, t) * (1 - smooth(0.45, 0.75, t));
-     const closeK = smooth(0.4, 0.85, t) * (1 - smooth(0.85, 1.0, t));
-     const lead = s > 0 ? "R" : "L", trail = s > 0 ? "L" : "R";
-     /* the lead thigh out (a third of a metre at the plant) and the knee taking the weight; the trailing leg drives, then closes */
-     turn(rig, "l" + lead + "0", 6 * plant, 0, zFor(cal, "l" + lead + "0", s * SS.reach, 12, 60) * plant, 1);
-     turn(rig, "l" + lead + "1", SS.knee * Math.sin(Math.PI * clamp(t / 0.7, 0, 1)), 0, 0, 1);
-     turn(rig, "l" + trail + "1", 22 * drive, 0, 0, 1);
-     turn(rig, "l" + trail + "0", -8 * drive, 0, zFor(cal, "l" + trail + "0", s * SS.reach * 0.4, 5, 30) * closeK, 1);
-     /* the ribs into the travel (a quarter of a metre at the head), the head still level on the man */
-     const leanZ = zFor(cal, "abdomen", s * SS.leanReach, 5, 28) * plant;
-     turn(rig, "abdomen", 4 * plant, 0, leanZ, 1);
-     turn(rig, "head", 0, 0, -leanZ * 0.8, 1);
-     /* the guard up, the trailing arm across the body for balance */
-     if (SS.arms) {
-      turn(rig, "a" + lead + "0", -35 * plant, 0, (lead === "L" ? 1 : -1) * 18 * plant, 1); turn(rig, "a" + lead + "1", -55 * plant, 0, 0, 1);
-      turn(rig, "a" + trail + "0", -50 * plant, 0, (trail === "L" ? 1 : -1) * -28 * plant, 1); turn(rig, "a" + trail + "1", -70 * plant, 0, 0, 1);
-     }
-     SS.diag.steps++;
-    }
-   }
-   /* ---- the shuffle: a boxer's, with the lean and the guard ---- */
-   else if (typeof a.side === "number" && Math.abs(a.side) > 0.25 && (a.stride || 0) > 0.1 && !a.attack && !a.cast && !(a.air > 0.01) && !a.roll) {
-    const cal = calibrate(rig), s = a.side > 0 ? 1 : -1, k = clamp(Math.abs(a.side), 0, 1) * clamp(a.stride, 0, 1);
-    const leanZ = zFor(cal, "abdomen", s * SS.shuffleReach, 3, 16) * k;
-    turn(rig, "abdomen", 3 * k, 0, leanZ, 1);
-    turn(rig, "head", 0, 0, -leanZ * 0.8, 1);
-    if (SS.arms) { turn(rig, "aL0", -22 * k, 0, 10 * k, 1); turn(rig, "aL1", -40 * k, 0, 0, 1); turn(rig, "aR0", -22 * k, 0, -10 * k, 1); turn(rig, "aR1", -40 * k, 0, 0, 1); }
-    SS.diag.shuffles++;
-   }
-  } catch (e) { SS.diag.err = String(e); }
-  return r;
- };
-})();
-</script>
-<!-- THE STEP ASIDE END -->
 
 
 
 
 
+<!-- OVERGROUND LOCK START -->
+<script>
+/* OVERGROUND, ON ITS OWN.
+   The same file as the studio -- the set, the sky, the orrery, the
+   journey, the map and the black hole are all the studio's -- with the
+   fight's front door bricked up. It opens on its own card and goes
+   straight to the board; the game's title, gallery and studio are never
+   shown. What is left of the fight is the board itself with whoever is
+   on it tonight, standing where they were dealt, which is the point. */
+(() => {
+ "use strict";
+ window.OVERGROUND_BUILD = true;
+ const OG = window.LOCKHART_OVERGROUND; if (!OG) return;
+ const st = document.createElement("style");
+ st.textContent =
+  "#ogSplash{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;flex-direction:column;background:radial-gradient(ellipse at 50% 40%,#2a1c34 0%,#0a0710 70%);color:#f2e6cf;font-family:'Fredoka',sans-serif;text-align:center;letter-spacing:.12em}" +
+  "#ogSplash.off{display:none}" +
+  "#ogSplash h1{font-size:44px;margin:0 0 6px;letter-spacing:.3em;color:#f0d9a0}#ogSplash h2{font-size:13px;font-weight:500;margin:0 0 26px;color:#c9b38a;letter-spacing:.18em}" +
+  "#ogSplash p{max-width:560px;font-size:12.5px;line-height:1.7;color:#c9b38a;letter-spacing:.04em;margin:0 0 28px}" +
+  "#ogSplash button{font-family:inherit;cursor:pointer;background:#c9762b;color:#170f07;border:1px solid #e0a04a;border-radius:10px;padding:12px 34px;font-size:15px;letter-spacing:.2em;font-weight:700}" +
+  "#ogSplash button:hover{background:#e0a04a}#ogSplash .fine{margin-top:22px;font-size:10px;color:#7a6a4a;letter-spacing:.14em}" +
+  "body.overgroundBuild #overlay,body.overgroundBuild #gallery,body.overgroundBuild #charStudio,body.overgroundBuild #board{display:none!important}";
+ document.head.appendChild(st);
+ document.body.classList.add("overgroundBuild");
+ const sp = document.createElement("div"); sp.id = "ogSplash";
+ sp.innerHTML = "<h1>OVERGROUND</h1><h2>A JOURNEY TO THE CENTRE OF THE GALAXY</h2>" +
+  "<p>A board on one point in space, under the real sky tonight. A clay rocket on it. Click a world, a star, a nebula, or the empty sky, and go: the moon, the planets where they stand this evening, the sun, out among five thousand real stars with their figures and their worlds, and in twenty-six thousand light years to Sagittarius A*. Every number on every card is the real one. The distances are squeezed so it fits in one sky, and the squeeze is stated.</p>" +
+  "<button id='ogGo'>LIFT OFF</button><div class='fine'>DRAG TO LOOK ROUND · WHEEL TO CLOSE IN · ESC TO COME HOME</div>";
+ document.body.appendChild(sp);
+ /* the game's title is never shown: this card is the front door, and the way back */
+ if (typeof showOverlay === "function") {
+  const prior = showOverlay;
+  showOverlay = function (kind) {
+   const r = prior.apply(this, arguments);
+   try { if (kind === "title") { overlay.style.display = "none"; if (!OG.on) sp.classList.remove("off"); } } catch (e) {}
+   return r;
+  };
+ }
+ document.getElementById("ogGo").addEventListener("click", e => {
+  e.preventDefault(); e.stopPropagation();
+  try { if (typeof A !== "undefined" && A.ctx && A.ctx.resume) A.ctx.resume(); } catch (e2) {}
+  sp.classList.add("off");
+  try { OG.start(); } catch (e3) { console.error(e3); }
+ });
+ /* dusk, clear, the clay picture: the set as it was lit */
+ try { if (typeof LOCKHART_WEATHER !== "undefined") { LOCKHART_WEATHER.setTime(localStorage.getItem("lockhartTime") || "dusk", false); } } catch (e) {}
+})();
+</script>
+<!-- OVERGROUND LOCK END -->
 
 <!-- INFOSOUL DEEP LINK START -->
 <style>
 /* infosoullaboratories.com hosts this page as OVERGROUND only: the sky, not the game. */
 body:not(.overground) #overlay, body:not(.overground) .hud, body:not(.overground) #pad { visibility: hidden !important; }
-#ogList button.home, #ogHint { display: none !important; }
+body.overground #ogSplash:not(.off) { display: none !important; }
+body:not(.overgroundBuild) #ogList button.home, body:not(.overgroundBuild) #ogHint { display: none !important; }
 body.overground .hud, body.overground #board, body.overground #pad, body.overground #boutCard { display: none !important; }
 </style>
 <script>
 (() => {
  "use strict";
+ const LOCKED = true;   /* the build has its own LIFT OFF card */
  let tries = 0;
  const t = setInterval(() => {
   const OG = window.LOCKHART_OVERGROUND, b = document.getElementById("overgroundBtn");
+  if (LOCKED) { if (OG) { clearInterval(t); setInterval(clearDeckForTheSky, 600); } else if (++tries > 1200) clearInterval(t); return; }
   if (OG && b) { clearInterval(t); try { b.click(); } catch (e) {} keep(OG); }
   else if (++tries > 1200) clearInterval(t);
  }, 250);
@@ -46468,7 +45868,7 @@ body.overground .hud, body.overground #board, body.overground #pad, body.overgro
    clearDeckForTheSky();
   }, 600);
  }
- window.addEventListener("keydown", e => {
+ if (!LOCKED) window.addEventListener("keydown", e => {
   const OG = window.LOCKHART_OVERGROUND;
   if (e.code === "Escape" && OG && OG.on && !(OG.journey && OG.journey.on) && OG.state === "deck") { e.stopImmediatePropagation(); e.preventDefault(); }
  }, true);

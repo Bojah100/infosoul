@@ -46301,9 +46301,31 @@ body.overground .hud, body.overground #board, body.overground #pad, body.overgro
   if (OG && b) { clearInterval(t); try { b.click(); } catch (e) {} keep(OG); }
   else if (++tries > 1200) clearInterval(t);
  }, 250);
+ /* The sky, not the bout: Overground starts a six-way on the deck so the
+    board has names on it. Here the deck is cleared. Every fighter is
+    benched the way the game benches its own hero -- out, and invisible --
+    so the round never plays, nobody swings, and nothing is said. */
+ function clearDeckForTheSky() {
+  try {
+   const list = (typeof FIGHTERS !== "undefined" && FIGHTERS) ? FIGHTERS : [];
+   for (const f of list) {
+    if (!f) continue;
+    f.out = true; f.carried = true; f.ko = false; f.atk = null; f.cast = null; f.blocking = false; f._sayQ = null;
+    if (f.rig) {
+     if (f.rig.root) f.rig.root.visible = false;
+     if (f.rig.contact) f.rig.contact.visible = false;
+     if (f.rig.ring) f.rig.ring.visible = false;
+    }
+   }
+  } catch (e) {}
+ }
  /* ESC or the ring button would hand the visitor the game. Put them back on the deck instead. */
  function keep(OG) {
-  setInterval(() => { try { if (!OG.on && typeof OG.start === "function") OG.start(); } catch (e) {} }, 600);
+  clearDeckForTheSky();
+  setInterval(() => {
+   try { if (!OG.on && typeof OG.start === "function") OG.start(); } catch (e) {}
+   clearDeckForTheSky();
+  }, 600);
  }
  window.addEventListener("keydown", e => {
   const OG = window.LOCKHART_OVERGROUND;

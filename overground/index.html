@@ -19936,7 +19936,8 @@ function driveHuman(f, dt, pad) {
 
   /* holding back with no swing is a guard */
   f.blocking = !f.atk && fwd < 0 && f.stagger <= 0 && f.h <= 0 && f.landT <= 0 && !(f.jumpPrep > 0);
-  const spd = (f.jumpPrep > 0 ? 0.2 : (f.stumble > 0 ? 0.9 : (f.h > 0 ? 0.5 : (f.landT > 0 ? 0.8 : (f.atk ? 0.7 : (f.blocking ? 1.6 : 3.6))))))
+  /* guarding, he still circles: the guard slows the walk, not the sidestep */
+  const spd = (f.jumpPrep > 0 ? 0.2 : (f.stumble > 0 ? 0.9 : (f.h > 0 ? 0.5 : (f.landT > 0 ? 0.8 : (f.atk ? 0.7 : (f.blocking ? (side ? 2.5 : 1.6) : 3.6))))))
             * (f.snared > 0 ? 0.38 : 1)
               * (fwd < 0 ? 0.85 : 1)
               * vigour(f);                       /* slower the emptier the bar */
@@ -19968,8 +19969,8 @@ function startRoll(f) {
   if (!fwd && !side) { fwd = -1; }
   const m = Math.hypot(fwd, side) || 1;
   f.rollDir = Math.atan2((ay * fwd + sy * side) / m, (ax * fwd + sx * side) / m);
-  f.rollTotal = quirkOf(f).flips ? 0.56 : 0.4;   /* going over takes longer than stepping */
-  f.rollT = f.rollTotal; f.rollCool = 0.75; f.invuln = quirkOf(f).flips ? 0.40 : 0.28;
+  f.rollTotal = quirkOf(f).flips ? 0.56 : 0.44;  /* going over takes longer than stepping */
+  f.rollT = f.rollTotal; f.rollCool = 0.7; f.invuln = quirkOf(f).flips ? 0.42 : 0.34;
   f.blocking = false;
   A.whoosh(0.2);
 }
@@ -19982,7 +19983,7 @@ function startRoll(f) {
 function updateRoll(f, dt) {
   if (f.rollT <= 0) return false;
   f.rollT -= dt;
-  const rs = 7.0 * clamp(f.rollT / (f.rollTotal || 0.4), 0.25, 1);
+  const rs = 8.2 * clamp(f.rollT / (f.rollTotal || 0.44), 0.25, 1);   /* a real step aside: further, and out of the way sooner */
   moveFighter(f, Math.cos(f.rollDir) * rs * dt, Math.sin(f.rollDir) * rs * dt, false);
   f.phase += dt * 14; f.stride = 1;
   return true;
@@ -43976,7 +43977,7 @@ else {
   const from = rocket.getWorldPosition(new THREE.Vector3());
   if (OG.deepOn) leaveDeep();
   const dest = standoff(t, from), dist = from.distanceTo(dest);
-  OG.flight = { from: from, to: dest, t: 0, dur: clamp(2.6 + dist / 320, 3, 10), target: t, lift: OG.state === "deck" };
+  OG.flight = { from: from, to: dest, t: 0, dur: clamp(8 + dist / 100, 10, 32) /* INFOSOUL: a tour, not a dash */, target: t, lift: OG.state === "deck" };
   OG.target = t;
   if (OG.state === "deck") { scene.attach(rocket); OG.state = "lift"; OG.t = 0; }
   else OG.state = "fly";
@@ -43989,7 +43990,7 @@ else {
   const from = rocket.getWorldPosition(new THREE.Vector3());
   const c = (typeof CENTER !== "undefined") ? CENTER : { x: 0, y: 0 };
   const dest = new THREE.Vector3(c.x, 14, c.y - 2.5);
-  OG.flight = { from: from, to: dest, t: 0, dur: clamp(2.6 + from.distanceTo(dest) / 320, 3, 9), target: null, home: true };
+  OG.flight = { from: from, to: dest, t: 0, dur: clamp(6 + from.distanceTo(dest) / 120, 8, 24) /* INFOSOUL */, target: null, home: true };
   OG.target = null; OG.state = "fly"; list(); card(null);
  }
  function deep(t) {
@@ -44031,7 +44032,7 @@ else {
    return;
   }
   if (S === "lift") {
-   OG.t += dt; const u = clamp(OG.t / 2.2, 0, 1);
+   OG.t += dt; const u = clamp(OG.t / 4.5, 0, 1); /* INFOSOUL: a slower lift-off */
    const F = OG.flight; const R = F.from;
    rocket.position.set(R.x, R.y + 14 * u * u, R.z); rocket.quaternion.identity();
    flame.visible = true; flame.scale.set(0.6 + 0.4 * Math.random(), 1.4 + 1.6 * u + 0.4 * Math.random(), 1);
@@ -44062,7 +44063,7 @@ else {
    return;
   }
   if (S === "land") {
-   OG.t += dt; const u = clamp(OG.t / 2.4, 0, 1);
+   OG.t += dt; const u = clamp(OG.t / 6, 0, 1); /* INFOSOUL: a slower warp */
    const top = OG.flight.to;
    rocket.position.set(top.x, top.y - (top.y - 0.06) * ease(u), top.z); rocket.quaternion.identity();
    flame.visible = u < 0.9; flame.scale.set(0.6, 1.2 + (1 - u), 1);
@@ -44073,7 +44074,7 @@ else {
   if (S === "warp") {
    if (!OG.warpP) { OG.warpP = camera.position.clone(); OG.warpQ = camera.quaternion.clone(); }
    camera.position.copy(OG.warpP); camera.quaternion.copy(OG.warpQ);
-   OG.t += dt; const u = clamp(OG.t / 1.6, 0, 1);
+   OG.t += dt; const u = clamp(OG.t / 3.2, 0, 1); /* INFOSOUL: a slower landing */
    flame.visible = true;
    fadeEl.style.opacity = String(u < 0.5 ? ease(u / 0.5) : 1);
    if (u >= 1) {
@@ -46250,10 +46251,31 @@ else {
   } catch (e) {}
   return r;
  };
+ /* BACK (the small left button) puts you in his shoes and takes you out again */
+ let backWas = false;
+ function backButton() {
+  try {
+   if (!navigator.getGamepads) return;
+   const list = navigator.getGamepads(); let g = null; for (let i = 0; list && i < list.length; i++) if (list[i] && list[i].connected) { g = list[i]; break; }
+   const bt = g && g.buttons || [], b = bt[GP.BACK], down = !!(b && (b.pressed || b.value > 0.5));
+   if (down && !backWas && typeof povSet === "function" && typeof started !== "undefined" && started && !paused) { povSet(!POV.on); SF.diag.pov = (SF.diag.pov || 0) + 1; }
+   backWas = down;
+  } catch (e) {}
+ }
+ /* the card's note: everything the pad does */
+ if (typeof gamepadNote === "function") {
+  gamepadNote = function () {
+   if (!GP.count) return "";
+   return "<p style='color:#7de3ff'>" + GP.count + (GP.count === 1 ? " controller" : " controllers") + " connected &mdash; " +
+    "<k>A</k> swing &nbsp; <k>B</k> heavy &nbsp; <k>X</k> jump &nbsp; <k>LB</k> sidestep &nbsp; <k>RB</k> grab, then pull the stick back to throw him behind you &nbsp; " +
+    "<k>RT</k> power &nbsp; <k>LT</k> second power &nbsp; <k>Y</k> resonance on a full meter &nbsp; <k>BACK</k> in his shoes &nbsp; <k>START</k> pause</p>";
+  };
+ }
  /* over the sky: the right stick looks round, the triggers close in and back out */
  const priorPoll = pollGamepads;
  pollGamepads = function () {
   const r = priorPoll.apply(this, arguments);
+  backButton();
   try {
    const og = OG(); if (!SF.on || !og || !og.on || !navigator.getGamepads) return r;
    const list = navigator.getGamepads(); let g = null; for (let i = 0; list && i < list.length; i++) if (list[i] && list[i].connected) { g = list[i]; break; }
@@ -46279,6 +46301,125 @@ else {
 })();
 </script>
 <!-- THE SOFA END -->
+<!-- THE STEP ASIDE START -->
+<script>
+/* ==================================================================
+   THE STEP ASIDE
+   A sidestep was one pose, blended in and out, the same whichever way
+   the man was going: a scurry that read as a stumble. A step aside is
+   a lateral lunge, and it has two beats. THE PLANT: the lead foot goes
+   out wide, the lead knee takes the weight, the trailing leg drives,
+   the hips go over the lead foot and the ribs lean into the travel,
+   the guard stays up with the trailing arm across for balance. THE
+   CLOSE: the trailing foot slides in under him, the hips level, the
+   ribs come back upright, and he settles square, still facing the man
+   he is fighting. Walking sideways gets the same lean and guard, so a
+   shuffle round a man looks like a boxer's, not a crab's. The rigs are
+   built by hand and their joints do not all bend the same way, so the
+   first time a rig steps the module checks which way its own hips and
+   thighs went and keeps the sign that leaned into the step.
+   ================================================================== */
+(() => {
+ "use strict";
+ if (typeof animateRig !== "function" || typeof LOCKHART_MOCAP === "undefined" || typeof THREE === "undefined") return;
+ const SS = { on: true, reach: 0.32, knee: 26, leanReach: 0.24, arms: true, shuffleReach: 0.12, diag: { steps: 0, shuffles: 0, calibrated: 0, err: null } };
+ window.LOCKHART_SIDESTEP = SS;
+ const M = LOCKHART_MOCAP, D2R = Math.PI / 180;
+ const Q = new THREE.Quaternion(), QN = new THREE.Quaternion(), E = new THREE.Euler(), W1 = new THREE.Vector3(), W2 = new THREE.Vector3(), W3 = new THREE.Vector3();
+ const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+ const smooth = (a, b, x) => { const u = clamp((x - a) / (b - a), 0, 1); return u * u * (3 - 2 * u); };
+ function turn(rig, key, x, y, z, w) { const t = M.joint(rig, key); if (!t || w <= 0) return; Q.setFromEuler(E.set(x * D2R * w, y * D2R * w, z * D2R * w, "ZXY")); QN.copy(t.quaternion).multiply(Q); t.quaternion.copy(QN); }
+ const fighterOf = rig => (typeof fighterOfRig === "function") ? fighterOfRig(rig) : null;
+ /* Which way is "out" for each of this rig's thighs, and "over" for its
+    ribs, and how far a degree takes them: measured once per rig, in both
+    directions, against the rig's own right. The rigs stand side-on with
+    the hips yawed, so a thigh's own axis is nowhere near the world's
+    sideways and the two legs do not answer alike. */
+ const PROBES = [["lL0", 30, r => r.legs && r.legs[0] && (r.legs[0].ankle || r.legs[0].knee)], ["lR0", 30, r => r.legs && r.legs[1] && (r.legs[1].ankle || r.legs[1].knee)], ["abdomen", 20, r => M.joint(r, "head")]];
+ function calibrate(rig) {
+  if (rig._ssCal) return rig._ssCal;
+  const cal = {};
+  try {
+   rig.root.updateMatrixWorld(true);
+   const right = new THREE.Vector3(1, 0, 0).applyQuaternion(rig.root.getWorldQuaternion(new THREE.Quaternion()));
+   for (const [key, deg, partOf] of PROBES) {
+    const j = M.joint(rig, key), part = partOf(rig); if (!j || !part) continue;
+    const q0 = j.quaternion.clone(); part.getWorldPosition(W1);
+    turn(rig, key, 0, 0, deg, 1); rig.root.updateMatrixWorld(true); part.getWorldPosition(W2); j.quaternion.copy(q0);
+    turn(rig, key, 0, 0, -deg, 1); rig.root.updateMatrixWorld(true); part.getWorldPosition(W3); j.quaternion.copy(q0);
+    cal[key] = { plus: W2.sub(W1).dot(right) / deg, minus: W3.sub(W1).dot(right) / deg };   /* metres to the right, per degree, each way */
+   }
+   rig.root.updateMatrixWorld(true);
+   SS.diag.calibrated++;
+  } catch (e) { SS.diag.err = String(e); }
+  return (rig._ssCal = cal);
+ }
+ /* the z turn, in degrees, that takes this joint's part `want` metres to the right (negative: to the left) */
+ function zFor(cal, key, want, lo, hi) {
+  const c = cal[key]; if (!c) return 0;
+  const sgn = want >= 0 ? 1 : -1;
+  const cand = [];
+  if (c.plus * sgn > 1e-4) cand.push([1, c.plus * sgn]);
+  if (c.minus * sgn > 1e-4) cand.push([-1, c.minus * sgn]);
+  if (!cand.length) return 0;
+  cand.sort((a, b) => b[1] - a[1]);
+  return cand[0][0] * clamp(Math.abs(want) / cand[0][1], lo, hi);
+ }
+ const prior = animateRig;
+ animateRig = function (rig, a) {
+  /* a step aside is built on the stance, not on the old roll pose (which
+     leaned one way whichever way he went and fought the left-hand step) */
+  let stepSide = 0, f = null;
+  if (SS.on && rig && a && rig.root && a.roll > 0 && !a.flip && !(a.down > 0.01) && !a.ko) {
+   f = fighterOf(rig);
+   if (f && typeof f.rollDir === "number") { const rel = (typeof angDiff === "function") ? angDiff(f.rollDir, f.ang) : 0; const side = Math.sin(rel); if (Math.abs(side) > 0.45) stepSide = side; }
+  }
+  const r = stepSide ? prior.call(this, rig, Object.assign({}, a, { roll: 0, stride: 0 })) : prior.apply(this, arguments);
+  if (!SS.on || !rig || !a || !rig.root || a.down > 0.01 || a.ko) return r;
+  try {
+   if (!f) f = fighterOf(rig);
+   /* ---- the step aside: a lateral lunge in two beats ---- */
+   if (stepSide) {
+    const side = stepSide;
+    {
+     const cal = calibrate(rig), s = side > 0 ? 1 : -1;          /* +1: to his right */
+     const t = clamp(a.roll, 0, 1);
+     const plant = Math.sin(Math.PI * clamp(t / 0.9, 0, 1));    /* out, then back square */
+     const drive = smooth(0.0, 0.3, t) * (1 - smooth(0.45, 0.75, t));
+     const closeK = smooth(0.4, 0.85, t) * (1 - smooth(0.85, 1.0, t));
+     const lead = s > 0 ? "R" : "L", trail = s > 0 ? "L" : "R";
+     /* the lead thigh out (a third of a metre at the plant) and the knee taking the weight; the trailing leg drives, then closes */
+     turn(rig, "l" + lead + "0", 6 * plant, 0, zFor(cal, "l" + lead + "0", s * SS.reach, 12, 60) * plant, 1);
+     turn(rig, "l" + lead + "1", SS.knee * Math.sin(Math.PI * clamp(t / 0.7, 0, 1)), 0, 0, 1);
+     turn(rig, "l" + trail + "1", 22 * drive, 0, 0, 1);
+     turn(rig, "l" + trail + "0", -8 * drive, 0, zFor(cal, "l" + trail + "0", s * SS.reach * 0.4, 5, 30) * closeK, 1);
+     /* the ribs into the travel (a quarter of a metre at the head), the head still level on the man */
+     const leanZ = zFor(cal, "abdomen", s * SS.leanReach, 5, 28) * plant;
+     turn(rig, "abdomen", 4 * plant, 0, leanZ, 1);
+     turn(rig, "head", 0, 0, -leanZ * 0.8, 1);
+     /* the guard up, the trailing arm across the body for balance */
+     if (SS.arms) {
+      turn(rig, "a" + lead + "0", -35 * plant, 0, (lead === "L" ? 1 : -1) * 18 * plant, 1); turn(rig, "a" + lead + "1", -55 * plant, 0, 0, 1);
+      turn(rig, "a" + trail + "0", -50 * plant, 0, (trail === "L" ? 1 : -1) * -28 * plant, 1); turn(rig, "a" + trail + "1", -70 * plant, 0, 0, 1);
+     }
+     SS.diag.steps++;
+    }
+   }
+   /* ---- the shuffle: a boxer's, with the lean and the guard ---- */
+   else if (typeof a.side === "number" && Math.abs(a.side) > 0.25 && (a.stride || 0) > 0.1 && !a.attack && !a.cast && !(a.air > 0.01) && !a.roll) {
+    const cal = calibrate(rig), s = a.side > 0 ? 1 : -1, k = clamp(Math.abs(a.side), 0, 1) * clamp(a.stride, 0, 1);
+    const leanZ = zFor(cal, "abdomen", s * SS.shuffleReach, 3, 16) * k;
+    turn(rig, "abdomen", 3 * k, 0, leanZ, 1);
+    turn(rig, "head", 0, 0, -leanZ * 0.8, 1);
+    if (SS.arms) { turn(rig, "aL0", -22 * k, 0, 10 * k, 1); turn(rig, "aL1", -40 * k, 0, 0, 1); turn(rig, "aR0", -22 * k, 0, -10 * k, 1); turn(rig, "aR1", -40 * k, 0, 0, 1); }
+    SS.diag.shuffles++;
+   }
+  } catch (e) { SS.diag.err = String(e); }
+  return r;
+ };
+})();
+</script>
+<!-- THE STEP ASIDE END -->
 
 
 

@@ -17,6 +17,7 @@ The hosted page is the game file plus four INFOSOUL-marked patches:
   5. the flights are slower: the original hops between worlds in 3-10 s,
      the hosted tour takes 9-32 s (the moon ~10 s, Mars ~15 s, Pluto ~32 s),
      so the visitor can look around;
+  7. the backing track is kept off (the rocket's own sounds stay);
   6. the tour's clock runs on real seconds, so flights take the same time on a
      slow machine as on a fast one (just with fewer frames).
 """
@@ -118,7 +119,7 @@ hook = '''
  let tries = 0;
  const t = setInterval(() => {
   const OG = window.LOCKHART_OVERGROUND, b = document.getElementById("overgroundBtn");
-  if (LOCKED) { if (OG) { clearInterval(t); setInterval(clearDeckForTheSky, 600); } else if (++tries > 1200) clearInterval(t); return; }
+  if (LOCKED) { if (OG) { clearInterval(t); setInterval(() => { clearDeckForTheSky(); noMusic(); }, 600); } else if (++tries > 1200) clearInterval(t); return; }
   if (OG && b) { clearInterval(t); try { b.click(); } catch (e) {} keep(OG); }
   else if (++tries > 1200) clearInterval(t);
  }, 250);
@@ -140,12 +141,16 @@ hook = '''
    }
   } catch (e) {}
  }
+ /* The sky is quiet: the backing track stays off. The rocket's own sounds are left alone. */
+ function noMusic() {
+  try { if (typeof A !== "undefined" && A && !A.musicOff && typeof setMusic === "function") setMusic(false); } catch (e) {}
+ }
  /* ESC or the ring button would hand the visitor the game. Put them back on the deck instead. */
  function keep(OG) {
-  clearDeckForTheSky();
+  clearDeckForTheSky(); noMusic();
   setInterval(() => {
    try { if (!OG.on && typeof OG.start === "function") OG.start(); } catch (e) {}
-   clearDeckForTheSky();
+   clearDeckForTheSky(); noMusic();
   }, 600);
  }
  if (!LOCKED) window.addEventListener("keydown", e => {

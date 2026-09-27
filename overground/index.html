@@ -45861,7 +45861,7 @@ ch (e) {}
  let tries = 0;
  const t = setInterval(() => {
   const OG = window.LOCKHART_OVERGROUND, b = document.getElementById("overgroundBtn");
-  if (LOCKED) { if (OG) { clearInterval(t); setInterval(clearDeckForTheSky, 600); } else if (++tries > 1200) clearInterval(t); return; }
+  if (LOCKED) { if (OG) { clearInterval(t); setInterval(() => { clearDeckForTheSky(); noMusic(); }, 600); } else if (++tries > 1200) clearInterval(t); return; }
   if (OG && b) { clearInterval(t); try { b.click(); } catch (e) {} keep(OG); }
   else if (++tries > 1200) clearInterval(t);
  }, 250);
@@ -45883,12 +45883,16 @@ ch (e) {}
    }
   } catch (e) {}
  }
+ /* The sky is quiet: the backing track stays off. The rocket's own sounds are left alone. */
+ function noMusic() {
+  try { if (typeof A !== "undefined" && A && !A.musicOff && typeof setMusic === "function") setMusic(false); } catch (e) {}
+ }
  /* ESC or the ring button would hand the visitor the game. Put them back on the deck instead. */
  function keep(OG) {
-  clearDeckForTheSky();
+  clearDeckForTheSky(); noMusic();
   setInterval(() => {
    try { if (!OG.on && typeof OG.start === "function") OG.start(); } catch (e) {}
-   clearDeckForTheSky();
+   clearDeckForTheSky(); noMusic();
   }, 600);
  }
  if (!LOCKED) window.addEventListener("keydown", e => {

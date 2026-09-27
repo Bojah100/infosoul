@@ -77,15 +77,25 @@ swap('''<div id="loading">
   <div id="loadLabel">building the sky</div>''', "loading card")
 
 locked = "<!-- OVERGROUND LOCK START -->" in g   # the source has its own front door: keep it
-hook = '''
-<!-- INFOSOUL DEEP LINK START -->
+head_css = '''
+<!-- INFOSOUL HEAD START -->
 <style>
-/* infosoullaboratories.com hosts this page as OVERGROUND only: the sky, not the game. */
-body:not(.overground) #overlay, body:not(.overground) .hud, body:not(.overground) #pad { visibility: hidden !important; }
+/* infosoullaboratories.com hosts this page as OVERGROUND only: the sky, not the game.
+   This sits in the head because the page is eight megabytes: the game's name bars and
+   title card are parsed and painted seconds before anything at the end of the body. */
+''' + ("#overlay { display: none !important; }" if locked else "body:not(.overground) #overlay { visibility: hidden !important; }") + '''
+body:not(.overground) .hud, body:not(.overground) #pad { visibility: hidden !important; }
 body.overground #ogSplash:not(.off) { display: none !important; }
 body:not(.overgroundBuild) #ogList button.home, body:not(.overgroundBuild) #ogHint { display: none !important; }
 body.overground .hud, body.overground #board, body.overground #pad, body.overground #boutCard { display: none !important; }
 </style>
+<!-- INFOSOUL HEAD END -->'''
+title = "<title>Overground — a tour of the Milky Way · Infosoul Laboratories</title>"
+assert g.count(title) == 1
+g = g.replace(title, title + N(head_css), 1)
+
+hook = '''
+<!-- INFOSOUL DEEP LINK START -->
 <script>
 (() => {
  "use strict";
@@ -160,3 +170,12 @@ g = g[:a] + mod + g[b:]
 
 io.open(dst, "w", encoding="utf-8", newline="").write(g)
 print("built", dst, "from", src, f"({len(g):,} bytes)")
+
+# stamp the home page's links so a fresh deploy is never served from a browser's old copy
+site = os.path.join(os.path.dirname(dst), "..", "index.html")
+stamp = re.sub(r"[^a-z0-9]+", "-", os.path.basename(src).lower().replace(".html", "")) + "-" + str(int(os.path.getmtime(src)))
+h = io.open(site, encoding="utf-8", newline="").read()
+h2, n = re.subn(r'href="overground/(\?b=[^"]*)?"', 'href="overground/?b=' + stamp + '"', h)
+if h2 != h:
+    io.open(site, "w", encoding="utf-8", newline="").write(h2)
+print(f"home page: {n} Overground link(s) stamped ?b={stamp}")

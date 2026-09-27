@@ -413,6 +413,10 @@
     #talk .talk-note{margin:1.4rem 0 0;color:var(--text-dim);font-size:.95rem;max-width:70ch;
       border-left:2px solid var(--accent-warm);padding-left:.9rem}
     #talk .talk-note b{color:var(--text)}
+    #talk .talk-note{display:flex;gap:1rem;align-items:flex-start}
+    #talk .talk-note .portrait{flex:0 0 auto;width:88px;height:88px;border-radius:50%;object-fit:cover;object-position:center top;
+      border:1px solid var(--border);box-shadow:0 12px 28px -12px rgba(0,0,0,.7)}
+    #talk .talk-note > span{flex:1}
   
     /* ---- what we do (added 6 Sep 2026) ---- */
     #services .svc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:.9rem;margin-top:1.6rem}
@@ -1293,7 +1297,8 @@
       <div><b>A room that cannot pay</b> can host it for costs. Say what the budget carries.</div>
     </div>
 
-    <p class="talk-note">Presented by <b>Brock Satter</b>, Director of Infosoul Laboratories
+    <p class="talk-note"><img class="portrait" src="media/brock-satter.jpg" alt="Brock Satter"
+        onerror="this.remove()"><span>Presented by <b>Brock Satter</b>, Director of Infosoul Laboratories
       (<a href="https://www.linkedin.com/in/brock-satter-2253b429b/" rel="me">LinkedIn</a>).
       <b>BA, Comparative Studies of Science, Technology and Culture, University of Minnesota, 1993</b>
       &mdash; an individually designed major across information technology, biotechnology and
@@ -1305,7 +1310,7 @@
       game. He builds these systems for a living, is
       not a futurist, and is not selling anything from the stage. If an appliance is the right
       answer for your organization we will say so afterwards, in private, and you are free to
-      ignore it.</p>
+      ignore it.</span></p>
 
     <div class="bookad" id="book">
       <div class="cover" aria-hidden="true">

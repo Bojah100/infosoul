@@ -13,7 +13,8 @@ The hosted page is the game file plus four INFOSOUL-marked patches:
      BACK TO THE RING exit, and benches every fighter so the deck is empty;
   4. Escape on the deck no longer leaves Overground;
   5. the flights are slower: the original hops between worlds in 3-10 s,
-     the hosted tour takes 10-32 s, so the visitor can look around.
+     the hosted tour takes 9-32 s (the moon ~10 s, Mars ~15 s, Pluto ~32 s),
+     so the visitor can look around.
 """
 import glob, io, os, re, sys
 
@@ -125,9 +126,9 @@ def swap_mod(old, new, what):
     assert n == 1, f"{what}: expected one match in the Overground module, found {n}"
     mod = mod.replace(old, new, 1)
 swap_mod("dur: clamp(2.6 + dist / 320, 3, 10)",
-         "dur: clamp(8 + dist / 100, 10, 32) /* INFOSOUL: a tour, not a dash */", "flight duration")
+         "dur: clamp(8 + dist / 22, 9, 32) /* INFOSOUL: a tour, not a dash -- the moon in ten seconds, Pluto in half a minute */", "flight duration")
 swap_mod("dur: clamp(2.6 + from.distanceTo(dest) / 320, 3, 9)",
-         "dur: clamp(6 + from.distanceTo(dest) / 120, 8, 24) /* INFOSOUL */", "return flight duration")
+         "dur: clamp(6 + from.distanceTo(dest) / 30, 8, 24) /* INFOSOUL */", "return flight duration")
 swap_mod("OG.t += dt; const u = clamp(OG.t / 2.2, 0, 1);",
          "OG.t += dt; const u = clamp(OG.t / 4.5, 0, 1); /* INFOSOUL: a slower lift-off */", "lift-off")
 swap_mod("OG.t += dt; const u = clamp(OG.t / 2.4, 0, 1);",

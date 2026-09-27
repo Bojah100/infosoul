@@ -43977,7 +43977,7 @@ else {
   const from = rocket.getWorldPosition(new THREE.Vector3());
   if (OG.deepOn) leaveDeep();
   const dest = standoff(t, from), dist = from.distanceTo(dest);
-  OG.flight = { from: from, to: dest, t: 0, dur: clamp(8 + dist / 100, 10, 32) /* INFOSOUL: a tour, not a dash */, target: t, lift: OG.state === "deck" };
+  OG.flight = { from: from, to: dest, t: 0, dur: clamp(8 + dist / 22, 9, 32) /* INFOSOUL: a tour, not a dash -- the moon in ten seconds, Pluto in half a minute */, target: t, lift: OG.state === "deck" };
   OG.target = t;
   if (OG.state === "deck") { scene.attach(rocket); OG.state = "lift"; OG.t = 0; }
   else OG.state = "fly";
@@ -43990,7 +43990,7 @@ else {
   const from = rocket.getWorldPosition(new THREE.Vector3());
   const c = (typeof CENTER !== "undefined") ? CENTER : { x: 0, y: 0 };
   const dest = new THREE.Vector3(c.x, 14, c.y - 2.5);
-  OG.flight = { from: from, to: dest, t: 0, dur: clamp(6 + from.distanceTo(dest) / 120, 8, 24) /* INFOSOUL */, target: null, home: true };
+  OG.flight = { from: from, to: dest, t: 0, dur: clamp(6 + from.distanceTo(dest) / 30, 8, 24) /* INFOSOUL */, target: null, home: true };
   OG.target = null; OG.state = "fly"; list(); card(null);
  }
  function deep(t) {

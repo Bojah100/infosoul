@@ -15,6 +15,19 @@ body.overground #ogSplash:not(.off) { display: none !important; }
 body:not(.overgroundBuild) #ogList button.home, body:not(.overgroundBuild) #ogHint { display: none !important; }
 body.overground .hud, body.overground #board, body.overground #pad, body.overground #boutCard { display: none !important; }
 </style>
+<script>
+/* One wall clock for the tour, shared by every camera wrapper in a frame. */
+window.OG_realDt = (() => {
+ let last = 0, val = 0.016, stamp = -1;
+ return dt => {
+  const n = performance.now();
+  if (n - stamp < 4) return val;                     /* same frame: same answer */
+  val = last ? Math.min(0.5, (n - last) / 1000) : (dt || 0.016);
+  last = n; stamp = n;
+  return val;
+ };
+})();
+</script>
 <!-- INFOSOUL HEAD END -->
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Bangers&family=Comic+Neue:wght@300;400&display=swap" rel="stylesheet"/>
 <style>
@@ -44064,7 +44077,7 @@ else {
  const priorCam = updateFightCamera;
  updateFightCamera = function (dt, snap) {
   const r = priorCam.apply(this, arguments);
-  if (OG.on) { try { clearDeckFighters(); tick(Math.min(0.05, dt || 0.016)); if (typeof balLensDof === "function") balLensDof(0); } catch (e) { OG.diag.err = String(e); } }
+  if (OG.on) { try { clearDeckFighters(); tick(window.OG_realDt(dt) /* INFOSOUL: real seconds, whatever the frame rate */); if (typeof balLensDof === "function") balLensDof(0); } catch (e) { OG.diag.err = String(e); } }
   return r;
  };
  if (typeof driveAI === "function") {
@@ -44116,6 +44129,11 @@ else {
     }
    }
   } catch (e) {}
+  return r;
+ };
+})();
+</script>
+ch (e) {}
   return r;
  };
 })();
@@ -44842,7 +44860,7 @@ else {
     if (OG.on && !was) { buildProbes(); buildISS(); layers(); }
     if (!OG.on && was) { if (AT.probeGroup) AT.probeGroup.visible = false; if (AT.issGroup) AT.issGroup.visible = false; }
     was = OG.on;
-    if (OG.on && !J.on) tickISS(Math.min(0.05, dt || 0.016));
+    if (OG.on && !J.on) tickISS(window.OG_realDt(dt) /* INFOSOUL: real seconds, whatever the frame rate */);
    } catch (e) { AT.diag.err = String(e); }
    return r;
   };
@@ -45099,7 +45117,7 @@ else {
    const r = priorCam.apply(this, arguments);
    if (!OG.on || !LG.on) return r;
    try {
-    const d = Math.min(0.05, dt || 0.016);
+    const d = window.OG_realDt(dt) /* INFOSOUL: real seconds, whatever the frame rate */;
     tick(d);
     const key = J.on ? (J.hold ? "j:" + (J.hold.star >= 0 ? J.hold.star : J.hold.markName || "mark") : (J.flight ? "flight" : "glide")) : OG.state + ":" + (OG.target ? OG.target.id : "");
     if (key !== lastHoldKey) { lastHoldKey = key; LG.offered = null; if (LG.stage && (key.indexOf("flight") >= 0 || key.indexOf("fly") >= 0 || key.indexOf("warp") >= 0)) stop(); }

@@ -16,7 +16,9 @@ The hosted page is the game file plus four INFOSOUL-marked patches:
   4. Escape on the deck no longer leaves Overground;
   5. the flights are slower: the original hops between worlds in 3-10 s,
      the hosted tour takes 9-32 s (the moon ~10 s, Mars ~15 s, Pluto ~32 s),
-     so the visitor can look around.
+     so the visitor can look around;
+  6. the tour's clock runs on real seconds, so flights take the same time on a
+     slow machine as on a fast one (just with fewer frames).
 """
 import glob, io, os, re, sys
 
@@ -89,6 +91,19 @@ body.overground #ogSplash:not(.off) { display: none !important; }
 body:not(.overgroundBuild) #ogList button.home, body:not(.overgroundBuild) #ogHint { display: none !important; }
 body.overground .hud, body.overground #board, body.overground #pad, body.overground #boutCard { display: none !important; }
 </style>
+<script>
+/* One wall clock for the tour, shared by every camera wrapper in a frame. */
+window.OG_realDt = (() => {
+ let last = 0, val = 0.016, stamp = -1;
+ return dt => {
+  const n = performance.now();
+  if (n - stamp < 4) return val;                     /* same frame: same answer */
+  val = last ? Math.min(1.0, (n - last) / 1000) : (dt || 0.016);
+  last = n; stamp = n;
+  return val;
+ };
+})();
+</script>
 <!-- INFOSOUL HEAD END -->'''
 title = "<title>Overground — a tour of the Milky Way · Infosoul Laboratories</title>"
 assert g.count(title) == 1
@@ -166,6 +181,18 @@ swap_mod("OG.t += dt; const u = clamp(OG.t / 2.4, 0, 1);",
          "OG.t += dt; const u = clamp(OG.t / 6, 0, 1); /* INFOSOUL: a slower warp */", "warp")
 swap_mod("OG.t += dt; const u = clamp(OG.t / 1.6, 0, 1);",
          "OG.t += dt; const u = clamp(OG.t / 3.2, 0, 1); /* INFOSOUL: a slower landing */", "landing")
+# 6. the tour keeps real time. Every camera wrapper from the OVERGROUND module
+#    on feeds its tick at most 0.05 s a frame, so on a machine drawing ten
+#    frames a second the rocket moves at under half speed and looks stuck on
+#    the pad. All of them now share one wall clock, capped so a tab that was
+#    asleep does not leap when it wakes.
+tail = g[a:]
+n_clamp = tail.count("Math.min(0.05, dt || 0.016)")
+assert n_clamp >= 1, "no 0.05 s clamps found after the Overground module"
+tail = tail.replace("Math.min(0.05, dt || 0.016)", "window.OG_realDt(dt) /* INFOSOUL: real seconds, whatever the frame rate */")
+g = g[:a] + tail
+mod = g[a:g.index("<!-- OVERGROUND END -->")]
+print(f"  real-time clock: {n_clamp} frame clamp(s) replaced")
 g = g[:a] + mod + g[b:]
 
 io.open(dst, "w", encoding="utf-8", newline="").write(g)
@@ -173,7 +200,8 @@ print("built", dst, "from", src, f"({len(g):,} bytes)")
 
 # stamp the home page's links so a fresh deploy is never served from a browser's old copy
 site = os.path.join(os.path.dirname(dst), "..", "index.html")
-stamp = re.sub(r"[^a-z0-9]+", "-", os.path.basename(src).lower().replace(".html", "")) + "-" + str(int(os.path.getmtime(src)))
+import hashlib
+stamp = re.sub(r"[^a-z0-9]+", "-", os.path.basename(src).lower().replace(".html", "")) + "-" + hashlib.sha1(g.encode("utf-8")).hexdigest()[:8]
 h = io.open(site, encoding="utf-8", newline="").read()
 h2, n = re.subn(r'href="overground/(\?b=[^"]*)?"', 'href="overground/?b=' + stamp + '"', h)
 if h2 != h:

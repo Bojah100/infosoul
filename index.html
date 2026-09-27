@@ -426,6 +426,24 @@
     #services .svc p b{color:var(--text)}
     #services .svc-note{margin:1.5rem 0 0;color:var(--text-dim);font-size:.95rem;max-width:70ch}
     #services .svc-note b{color:var(--text)}
+
+    /* ---- overground / animation, video & audio (added 27 Sep 2026) ---- */
+    #overground .studio-hero{position:relative;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);
+      background:#000;aspect-ratio:16/9;box-shadow:0 24px 60px -20px rgba(0,0,0,.7)}
+    #overground .studio-hero video{width:100%;height:100%;object-fit:cover;display:block}
+    #overground .studio-hero .studio-cap{position:absolute;left:0;right:0;bottom:0;padding:14px 18px;
+      background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.78));font-size:.85rem;color:var(--text-dim)}
+    #overground .studio-cap b{color:var(--text)}
+    #overground .studio-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:.9rem;margin-top:1.4rem}
+    #overground .studio-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem 1.2rem}
+    #overground .studio-card h3{margin:0 0 .45rem;font-size:.98rem;color:var(--accent)}
+    #overground .studio-card p{margin:0;color:var(--text-dim);font-size:.9rem;line-height:1.55}
+    #overground .studio-card p b{color:var(--text)}
+    #overground .studio-card.wide{grid-column:1/-1;border-left:2px solid var(--accent-2);display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap}
+    #overground .studio-card.wide h3{color:var(--accent-2)}
+    #overground .studio-card.wide > div{flex:1;min-width:240px}
+    #overground .studio-ctas{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:1.6rem}
+    #overground .studio-note{margin:1.2rem auto 0;color:var(--text-dim);font-size:.85rem;max-width:72ch;text-align:center}
   </style>
 </head>
 <body>
@@ -445,6 +463,7 @@
       <a href="#sectors">Who We Help</a> <a href="#talk">The Talk</a>
       <a href="#appliances">AI Appliances</a>
       <a href="#avatar">Spokesperson</a>
+      <a href="#overground">Overground</a>
       <a href="#demo">Try a Demo</a>
       <a href="#hardware">Hardware Fit</a>
       <a href="#why-not-diy">Why Not DIY?</a>
@@ -702,6 +721,10 @@
         <p>The repeated, boring, error-prone sequence, done the same way every time without
           somebody remembering to do it.</p></div>
 
+      <div class="svc"><h3>Animation, video &amp; audio</h3>
+        <p>Explainers, welcome films, narration and score, produced in-house with open tools.
+          <a href="#overground">See Overground.</a></p></div>
+
       <div class="svc svc-wide"><h3>Archive digitisation</h3>
         <p>Putting a record online that exists only on paper, film or a dead hard drive &mdash;
           <b>in its existing format.</b> We index it; we do not edit it. Built for community
@@ -772,6 +795,67 @@
     <div class="problem-card" style="max-width:760px; margin:0 auto; text-align:center;">
       <p style="margin:0; color:var(--text-dim); font-size:0.9rem;"><strong style="color:var(--text);">Before we build one:</strong> we get written consent from anyone whose voice or likeness is used, and every generated video is clearly labeled as AI-generated. That's non-negotiable — trust is the whole point.</p>
     </div>
+  </div>
+</section>
+
+<section id="overground">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-tag">Animation &middot; Video &middot; Audio</div>
+      <h2>We also make the pictures and the sound.</h2>
+      <p>Animation, video and audio production, done the way we do everything else: with open
+        tools, on hardware you control, and handed over with the keys. Below is an example of
+        what that looks like &mdash; <b>Overground</b>, a teaching tool for exploring the Milky
+        Way, running live in your browser.</p>
+    </div>
+
+    <div class="studio-hero">
+      <video autoplay muted loop playsinline preload="metadata" poster="media/overground-poster.jpg"
+             aria-label="Animated flight through a model of the solar system: the sun, the planets and their orbits, drawn in clay">
+        <source src="media/overground-loop.webm" type="video/webm">
+        <source src="media/overground-loop.mp4" type="video/mp4">
+      </video>
+      <div class="studio-cap"><b>From the Overground set.</b> The sun, the planets and the stars are
+        modelled and animated in code, inside a web page. Nothing is downloaded and nothing is
+        licensed: it is built the moment the page opens.</div>
+    </div>
+
+    <div class="studio-grid">
+      <div class="studio-card wide">
+        <div><h3>Overground &middot; a tour of the Milky Way</h3>
+          <p>The planets where they actually are tonight. Five thousand real stars in their true
+            directions, the constellations in three dimensions, Voyager and the other probes at
+            today&rsquo;s distances, and a flight out to the centre of the galaxy. Every number on
+            every card is the real one; only the distances are squeezed so the whole sky fits in one
+            room, and it says so. <b>Made for classrooms, libraries, congregations and anyone who
+            wants to look up.</b> Click a world to fly to it.</p></div>
+        <a class="btn btn-primary" href="overground/">Explore the Milky Way</a>
+      </div>
+
+      <div class="studio-card"><h3>Animation</h3>
+        <p>Stop-motion in code: puppets, sets and film grain generated rather than downloaded, so
+          there is nothing to license and nothing to lose. Character work, motion capture, and a
+          director&rsquo;s camera, rendered in a browser or to a video file.</p></div>
+
+      <div class="studio-card"><h3>Video</h3>
+        <p>Welcome films, explainers, training pieces and teaching tools like the one above.
+          Title cards, a film look, and highlight reels cut automatically from a recording &mdash;
+          without a production company&rsquo;s invoice, and without your footage leaving your
+          building.</p></div>
+
+      <div class="studio-card"><h3>Audio</h3>
+        <p>Narration from open-source speech models, in any language your community speaks.
+          Sound effects and score synthesised in code for the piece, not licensed for it. The same
+          voices power our <a href="#avatar">digital spokesperson</a>.</p></div>
+    </div>
+
+    <div class="studio-ctas">
+      <a class="btn btn-ghost" href="overground/">Open Overground</a>
+      <a class="btn btn-ghost" href="#contact">Talk to us about a piece</a>
+    </div>
+    <p class="studio-note">Overground is a desktop-browser piece and takes a moment to build itself
+      on first load. It works best with a mouse: click a world or a name to fly there, drag to look
+      round, roll the wheel to close in.</p>
   </div>
 </section>
 
@@ -1091,7 +1175,7 @@
       </div>
     </div>
 
-    <p class="talk-note">Presented by <b>Bojah</b>, Director of Infosoul Laboratories (<a href="https://www.linkedin.com/in/brock-satter-2253b429b/" rel="me">LinkedIn</a>) &mdash; not a futurist, and not selling anything
+    <p class="talk-note">Presented by <b>Brock Satter</b>, Director of Infosoul Laboratories (<a href="https://www.linkedin.com/in/brock-satter-2253b429b/" rel="me">LinkedIn</a>) &mdash; not a futurist, and not selling anything
       from the stage. If an appliance is the right answer for your organization we will say so
       afterwards, in private, and you are free to ignore it.</p>
 
@@ -1142,6 +1226,7 @@
       <a href="#problem">The Problem</a>
       <a href="#sectors">Who We Help</a>
       <a href="#appliances">AI Appliances</a>
+      <a href="#overground">Overground</a>
       <a href="#how">How It Works</a>
       <a href="#pricing">Working Together</a>
       <a href="#contact">Contact</a>

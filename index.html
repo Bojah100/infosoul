@@ -481,6 +481,23 @@
     #talk .booking .full{grid-column:1/-1}
     #talk .booking .btn{margin-top:.9rem}
     #talk .booking .note{margin:.7rem 0 0;font-size:.8rem;color:var(--text-dim)}
+    #talk .bookad{margin-top:1.4rem;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem 1.5rem;display:grid;grid-template-columns:auto 1fr;gap:1.4rem 1.8rem;align-items:start}
+    #talk .bookad .cover{width:150px;aspect-ratio:5/8;border-radius:6px;background:linear-gradient(160deg,#1f2536,#0f121a);border:1px solid var(--border);box-shadow:14px 14px 32px -16px rgba(0,0,0,.8), inset 6px 0 0 rgba(110,231,201,.55);padding:16px 14px 14px 20px;display:flex;flex-direction:column;justify-content:space-between;color:var(--text)}
+    #talk .bookad .cover .t{font-weight:800;font-size:1rem;line-height:1.15;letter-spacing:.01em}
+    #talk .bookad .cover .t span{display:block;color:var(--accent);font-weight:600;font-size:.85rem;margin-top:.25rem}
+    #talk .bookad .cover .a{font-size:.68rem;color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase}
+    #talk .bookad .cover .s{font-size:.58rem;color:var(--accent-2);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+    #talk .bookad h3{margin:0 0 .3rem;font-size:1.1rem;color:var(--accent)}
+    #talk .bookad h3 small{display:block;font-weight:500;color:var(--text-dim);font-size:.84rem;margin-top:.2rem}
+    #talk .bookad p{margin:0 0 .7rem;color:var(--text-dim);font-size:.9rem;line-height:1.55}
+    #talk .bookad p b{color:var(--text)}
+    #talk .bookad .next{margin-top:.9rem;padding-top:.8rem;border-top:1px dashed var(--border);font-size:.86rem;color:var(--text-dim)}
+    #talk .bookad .next b{color:var(--text)}
+    #talk .bookad form{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.6rem}
+    #talk .bookad input{flex:1;min-width:200px;box-sizing:border-box;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:999px;padding:.7rem 1rem;font:inherit;font-size:.92rem}
+    #talk .bookad .btn{padding:12px 20px;font-size:.88rem}
+    #talk .bookad .fine{font-size:.76rem;color:var(--text-dim);margin:.5rem 0 0}
+    @media (max-width:560px){#talk .bookad{grid-template-columns:1fr}#talk .bookad .cover{width:120px}}
   </style>
 </head>
 <body>
@@ -1285,6 +1302,31 @@
       right answer for your organization we will say so afterwards, in private, and you are free to
       ignore it.</p>
 
+    <div class="bookad" id="book">
+      <div class="cover" aria-hidden="true">
+        <div class="s">For the Layman &middot; 1</div>
+        <div class="t">The AI Age,<span>For the Layman.</span></div>
+        <div class="a">Brock Satter</div>
+      </div>
+      <div>
+        <h3>The book: the talk, written down<small>Coming soon &middot; about 80 pages &middot; paperback and ebook</small></h3>
+        <p>Six short chapters, one sitting: a brief history and why it arrived all at once; the tech,
+          broken down, no maths; using it, with the real cases from the talk; what it gets wrong; who
+          owns it and what it means for work; and <b>run your own</b>, the half-day as a written
+          walkthrough, with the one-page guide as the appendix.</p>
+        <p><b>For hosts:</b> a copy for every seat can be added to any booking at cost. Say so in the
+          booking form.</p>
+        <form id="bookListForm" onsubmit="handleBookList(event)">
+          <input type="email" name="email" placeholder="Your email" required aria-label="Email address">
+          <button type="submit" class="btn btn-primary" id="bookListBtn">Tell me when it is out</button>
+        </form>
+        <p class="fine" id="bookListNote">One email when it is published. Nothing else.</p>
+        <div class="next"><b>Next in the series:</b> <i>The Feed, For the Layman</i> &mdash; who pays a
+          podcast, how a creator became the mainstream, and how a library, a local or a congregation
+          reaches its own people now.</div>
+      </div>
+    </div>
+
     <div class="booking" id="booking">
       <h3>Book a session</h3>
       <p>Pick the session, give us two dates, and we reply within one business day with a confirmation
@@ -1347,6 +1389,7 @@
         <select name="enquiry">
             <option value="">What is this about?</option>
             <option>Booking a session &mdash; AI for the Layman</option>
+            <option>The book &mdash; copies for our room, or tell me when it is out</option>
             <option>An AI appliance for our organization</option>
             <option>Archive digitisation &mdash; putting our records online</option>
             <option>Something else</option>
@@ -1686,6 +1729,27 @@
     catch (err) { window.prompt('Copy this listing:', text); }
     setTimeout(() => { b.textContent = was; }, 2600);
   });
+
+  // "Tell me when it is out": the book list, same inbox, its own subject line.
+  async function handleBookList(e){
+    e.preventDefault();
+    const form = e.target, btn = document.getElementById('bookListBtn'), note = document.getElementById('bookListNote');
+    btn.disabled = true; btn.textContent = 'Sending...';
+    try {
+      const res = await fetch(CONTACT_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ email: form.email.value, list: 'The AI Age, For the Layman (book)', _subject: 'Book list: ' + form.email.value })
+      });
+      if(!res.ok) throw new Error('Request failed: ' + res.status);
+      form.innerHTML = '<span style="color:var(--accent);font-weight:700">Thank you. You will hear once, when it is out.</span>';
+      note.style.display = 'none';
+    } catch(err){
+      btn.disabled = false; btn.textContent = 'Tell me when it is out';
+      note.textContent = 'That did not send. Email booking@overgroundrailroad.live and we will add you.';
+      note.style.color = 'var(--accent-warm)';
+    }
+  }
 </script>
 
 </body>

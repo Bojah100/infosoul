@@ -444,6 +444,43 @@
     #overground .studio-card.wide > div{flex:1;min-width:240px}
     #overground .studio-ctas{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:1.6rem}
     #overground .studio-note{margin:1.2rem auto 0;color:var(--text-dim);font-size:.85rem;max-width:72ch;text-align:center}
+
+    /* ---- AI for the Layman: the bookable ladder (27 Sep 2026) ---- */
+    #talk .talk-photos{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.7rem;margin:0 0 .8rem}
+    #talk .talk-photos figure{margin:0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--card)}
+    #talk .talk-photos img{width:100%;aspect-ratio:3/2;object-fit:cover;display:block}
+    #talk .talk-photos figcaption{padding:.5rem .7rem .6rem;font-size:.72rem;color:var(--text-dim);line-height:1.4}
+    #talk .talk-photos figcaption b{color:var(--text);display:block;font-size:.82rem}
+    #talk .talk-photos-note{margin:0 0 1.8rem;font-size:.76rem;color:var(--text-dim);text-align:center}
+    #talk .ladder{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-top:.4rem}
+    #talk .session{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem 1.3rem;display:flex;flex-direction:column;gap:.55rem}
+    #talk .session.wide{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;align-items:flex-start;gap:1.2rem 2rem}
+    #talk .session.wide > div{flex:1;min-width:240px;display:flex;flex-direction:column;gap:.55rem}
+    #talk .session .kicker{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-2)}
+    #talk .session h3{margin:0;font-size:1.06rem;color:var(--text)}
+    #talk .session h3 small{display:block;font-weight:500;color:var(--text-dim);font-size:.84rem;margin-top:.2rem}
+    #talk .session p{margin:0;color:var(--text-dim);font-size:.9rem;line-height:1.55}
+    #talk .session p b{color:var(--text)}
+    #talk .session .facts{list-style:none;margin:.2rem 0 0;padding:0;font-size:.84rem;color:var(--text-dim)}
+    #talk .session .facts li{padding:.28rem 0;border-top:1px dashed var(--border)}
+    #talk .session .facts b{color:var(--text)}
+    #talk .session .price{margin-top:auto;padding-top:.6rem;font-weight:700;color:var(--accent);font-size:1rem;line-height:1.3}
+    #talk .session .price span{display:block;font-weight:500;color:var(--text-dim);font-size:.78rem;margin-bottom:.35rem}
+    #talk .listing-btn{align-self:flex-start;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:999px;padding:.4rem .9rem;font-size:.78rem;cursor:pointer;font-family:inherit}
+    #talk .listing-btn:hover{border-color:var(--accent)}
+    #talk .logistics{margin-top:1.4rem;background:var(--bg-alt);border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem 1.3rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.7rem 1.6rem;font-size:.87rem;color:var(--text-dim);line-height:1.5}
+    #talk .logistics h3{grid-column:1/-1;margin:0 0 .2rem;font-size:1rem;color:var(--accent)}
+    #talk .logistics div b{color:var(--text)}
+    #talk .booking{margin-top:1.6rem;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem 1.5rem}
+    #talk .booking h3{margin:0 0 .3rem;font-size:1.1rem;color:var(--accent)}
+    #talk .booking > p{margin:0 0 1rem;color:var(--text-dim);font-size:.9rem}
+    #talk .booking .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.75rem}
+    #talk .booking label{display:block;font-size:.76rem;color:var(--text-dim);margin-bottom:.25rem;letter-spacing:.02em}
+    #talk .booking input,#talk .booking select,#talk .booking textarea{width:100%;box-sizing:border-box;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:.7rem .8rem;font:inherit;font-size:.92rem}
+    #talk .booking textarea{min-height:80px;resize:vertical}
+    #talk .booking .full{grid-column:1/-1}
+    #talk .booking .btn{margin-top:.9rem}
+    #talk .booking .note{margin:.7rem 0 0;font-size:.8rem;color:var(--text-dim)}
   </style>
 </head>
 <body>
@@ -460,7 +497,7 @@
     <nav class="links">
       <a href="#problem">The Problem</a>
       <a href="#ai-it">AI IT</a> <a href="#services">What We Do</a>
-      <a href="#sectors">Who We Help</a> <a href="#talk">The Talk</a>
+      <a href="#sectors">Who We Help</a> <a href="#talk">AI for the Layman</a>
       <a href="#appliances">AI Appliances</a>
       <a href="#avatar">Spokesperson</a>
       <a href="#overground">Overground</a>
@@ -1124,68 +1161,171 @@
 <section id="talk">
   <div class="wrap">
     <div class="section-head">
-      <div class="section-tag">The Talk</div>
+      <div class="section-tag">AI for the Layman</div>
       <h2>The AI Age, For the Layman.</h2>
       <p>Before an organization buys anything, somebody has to explain the thing. This is that
         explanation, given in your room, to your people &mdash; and it is the way most clients
-        meet us.</p>
+        meet us. <b>No background assumed.</b> The room asks the questions, and watches the
+        machine get one wrong.</p>
     </div>
 
-    <div class="talk-grid">
-      <div class="talk-card">
-        <h3>Formats</h3>
-        <ul class="talk-list">
-          <li><b>50 min</b> &mdash; a class slot or a lunchtime session. 35 and 15 for questions.</li>
-          <li><b>75 min</b> &mdash; the evening talk. 50 and 25. Best for a general audience.</li>
-          <li><b>90 min</b> &mdash; hands-on. The room uses one, on their own question, and watches
-            it get something wrong.</li>
-          <li><b>Half day</b> &mdash; run your own: install an open-source model on your own
-            machine. No subscription, no company reading your work.</li>
-          <li><b>Series</b> &mdash; three or four sessions for a library, congregation, local or
-            programme.</li>
+    <div class="talk-photos">
+      <figure><img src="media/room-library.jpg" alt="A public library reading room with people at long tables" loading="lazy">
+        <figcaption><b>The library</b>Staff training and public programming.</figcaption></figure>
+      <figure><img src="media/room-union.jpg" alt="A union member standing to speak at a town hall meeting" loading="lazy">
+        <figcaption><b>The local</b>The bargaining issue in every hall, without a sales pitch.</figcaption></figure>
+      <figure><img src="media/room-lecture.jpg" alt="An audience seated for a public lecture" loading="lazy">
+        <figcaption><b>The campus</b>General audience, first-year seminars, journalism, ethics.</figcaption></figure>
+      <figure><img src="media/room-townhall.jpg" alt="A town hall meeting with a panel on stage" loading="lazy">
+        <figcaption><b>The hall</b>Congregations, seniors, youth programmes, small business.</figcaption></figure>
+    </div>
+    <p class="talk-photos-note">The rooms it is built for. Photographs from open-licence galleries,
+      credited in <a href="media/CREDITS.md">media/CREDITS.md</a>; they are not our events.</p>
+
+    <div class="ladder">
+      <div class="session">
+        <div class="kicker">The talk &middot; step one</div>
+        <h3>The AI Age, For the Layman<small>50 min class or lunch slot &middot; 75 min evening edition, <i>Superintelligence for the People</i></small></h3>
+        <p>What AI is, what it gets wrong, who owns it, and what a room of ordinary people can run
+          themselves. The evening edition takes the word <i>superintelligence</i> apart: what is
+          actually being built, who profits, and what you keep.</p>
+        <ul class="facts">
+          <li><b>Room</b> &mdash; any size, seminar room to hall.</li>
+          <li><b>Leaves with</b> &mdash; a one-page plain-language guide for every seat.</li>
         </ul>
+        <div class="price">$500 <span>community and congregations</span>$1,500 <span>campus, library and professional</span></div>
+        <button class="listing-btn" type="button" data-listing="talk">Copy the listing for your calendar</button>
+        <textarea hidden id="listing-talk">The AI Age, For the Layman: a plain-language talk on what AI is, what it gets wrong and who owns it, for people who are not engineers. No background assumed; the room asks the questions and watches the machine get one wrong. With Brock Satter, Director of Infosoul Laboratories. 50 minutes, or 75 with discussion. All ages.</textarea>
       </div>
 
-      <div class="talk-card">
-        <h3>Who it is for</h3>
-        <ul class="talk-list">
-          <li><b>Libraries</b> &mdash; staff training and public programming. Also archives and
-            records people.</li>
-          <li><b>Unions</b> &mdash; the live bargaining issue in every local, and few people
-            speaking to members without selling something.</li>
-          <li><b>Campuses</b> &mdash; general audience, first-year seminars, journalism, library
-            science, ethics.</li>
-          <li><b>Churches</b> &mdash; the moral and spiritual questions, which almost nobody is
-            addressing.</li>
-          <li><b>Community</b> &mdash; seniors, youth programmes, small business, job seekers.</li>
+      <div class="session">
+        <div class="kicker">Workshop &middot; step two</div>
+        <h3>Ask It Yourself<small>90 min, hands-on</small></h3>
+        <p>The room puts its own questions to a model, watches it get one wrong, and learns how to
+          check. Laptops or phones, or two to a screen.</p>
+        <ul class="facts">
+          <li><b>Room</b> &mdash; up to 30 with laptops, 60 in pairs. Internet needed.</li>
+          <li><b>Leaves with</b> &mdash; a checking habit, and the guide.</li>
         </ul>
+        <div class="price">$750 <span>community and congregations</span>$2,000 <span>campus, library and professional</span></div>
+        <button class="listing-btn" type="button" data-listing="ask">Copy the listing for your calendar</button>
+        <textarea hidden id="listing-ask">Ask It Yourself: a hands-on 90-minute workshop. Bring your own questions and put them to an AI model, then learn how to check what it tells you. No experience needed; bring a laptop or phone, or share in pairs. With Brock Satter, Infosoul Laboratories. Limited to 30 seats.</textarea>
       </div>
 
-      <div class="talk-card">
-        <h3>What it costs, and what you need</h3>
-        <ul class="talk-list">
-          <li><b>Community and congregations</b> &mdash; $500&ndash;2,500</li>
-          <li><b>Campus, library and professional</b> &mdash; $1,500&ndash;5,000</li>
-          <li><b>A room that cannot pay</b> can host it for costs. Say what the budget carries.</li>
-          <li><b>Room</b> &mdash; anything from a seminar room to a hall. <b>Tech</b> &mdash;
-            a screen with HDMI, and internet if the session is hands-on.</li>
-          <li><b>Access</b> &mdash; all ages. No technical background assumed, and none required.</li>
-          <li><b>Lead time</b> &mdash; three weeks.</li>
+      <div class="session">
+        <div class="kicker">Workshop &middot; step three</div>
+        <h3>Make It Yourself<small>90 min, the generative one</small></h3>
+        <p>Everyone makes something real for their organisation: the newsletter, the flyer, the grant
+          paragraph, the announcement in two languages and in a spoken voice. <b>Built in advance from
+          three of your own documents</b>, so the exercises are yours. Models come from the open-source
+          galleries, <b>Hugging Face</b> and the <b>Ollama library</b>, free to download and keep.</p>
+        <ul class="facts">
+          <li><b>Room</b> &mdash; up to 25 with laptops. Internet needed.</li>
+          <li><b>Leaves with</b> &mdash; a finished piece, and the method.</li>
         </ul>
+        <div class="price">$750 <span>community and congregations</span>$2,000 <span>campus, library and professional</span></div>
+        <button class="listing-btn" type="button" data-listing="make">Copy the listing for your calendar</button>
+        <textarea hidden id="listing-make">Make It Yourself: a 90-minute generative workshop. Make something real for your organisation with AI: a newsletter, a flyer, a grant paragraph, an announcement in two languages. Built on our own documents, using free open-source tools you can keep. Everyone leaves with a finished piece. With Brock Satter, Infosoul Laboratories. Limited to 25 seats; bring a laptop.</textarea>
+      </div>
+
+      <div class="session">
+        <div class="kicker">Build &middot; step four</div>
+        <h3>Run Your Own<small>Half day</small></h3>
+        <p>Install an open-source model from Hugging Face or the Ollama library on your
+          organisation&rsquo;s own laptop and leave with it working. No subscription, and nothing
+          leaves the building.</p>
+        <ul class="facts">
+          <li><b>Room</b> &mdash; up to 12, each with a laptop. Power strips and internet needed.</li>
+          <li><b>Leaves with</b> &mdash; a running machine, and a written setup sheet.</li>
+        </ul>
+        <div class="price">$1,200 <span>community and congregations</span>$3,500 <span>campus, library and professional</span></div>
+        <button class="listing-btn" type="button" data-listing="run">Copy the listing for your calendar</button>
+        <textarea hidden id="listing-run">Run Your Own: a half-day session. Install a free, open-source AI model on your own laptop and leave with it working. No subscription, no company reading your work. With Brock Satter, Infosoul Laboratories. Limited to 12; bring a laptop and its charger.</textarea>
+      </div>
+
+      <div class="session wide">
+        <div>
+          <div class="kicker">The series</div>
+          <h3>All four, in order<small>Across a month, for a library, congregation or local</small></h3>
+          <p>The talk, then the two workshops, then the build. The room that heard the explanation
+            is the room that leaves running its own machine.</p>
+          <div class="price">Quoted <span>from the session prices, less for the set</span></div>
+        </div>
+        <div>
+          <div class="kicker">The staff edition</div>
+          <h3>Any session, for a team<small>Training days and in-service</small></h3>
+          <p>The same session for the people who work there, with a policy conversation added:
+            what the organisation will and will not use these tools for, written down before you leave.</p>
+          <div class="price">Quoted <span>by team size</span></div>
+        </div>
       </div>
     </div>
 
-    <p class="talk-note">Presented by <b>Brock Satter</b>, Director of Infosoul Laboratories (<a href="https://www.linkedin.com/in/brock-satter-2253b429b/" rel="me">LinkedIn</a>) &mdash; not a futurist, and not selling anything
-      from the stage. If an appliance is the right answer for your organization we will say so
-      afterwards, in private, and you are free to ignore it.</p>
+    <div class="logistics">
+      <h3>Everything a coordinator needs to say yes</h3>
+      <div><b>Room.</b> Seminar room to hall. <b>Tech:</b> a screen with HDMI. Internet for the
+        workshops; power strips for the build.</div>
+      <div><b>Access.</b> All ages. No technical background assumed, and none required. Large-print
+        guide on request. Step-free rooms preferred; say if yours is not.</div>
+      <div><b>Online.</b> Every session runs on Zoom or your own platform. Hybrid on request.</div>
+      <div><b>Recording.</b> Record it for your own members; we send the slides afterwards.</div>
+      <div><b>Paperwork.</b> Invoice on booking, W-9 on request, net 30. Purchase orders welcome.</div>
+      <div><b>Cancellation.</b> Free to 14 days out; half the fee inside that. Weather and
+        emergencies are rescheduled at no charge.</div>
+      <div><b>Lead time.</b> Three weeks. Funded series and conference programmes: a semester ahead.</div>
+      <div><b>A room that cannot pay</b> can host it for costs. Say what the budget carries.</div>
+    </div>
 
-    <div class="cta-row" style="margin-top:1.4rem">
-      <a class="btn btn-primary" href="#contact">Book the talk</a>
-      <a class="btn btn-ghost" href="band/site/speaking-ai.html">Read the one-sheet</a>
+    <p class="talk-note">Presented by <b>Brock Satter</b>, Director of Infosoul Laboratories
+      (<a href="https://www.linkedin.com/in/brock-satter-2253b429b/" rel="me">LinkedIn</a>).
+      <b>BA, Comparative Studies of Science, Technology and Culture, University of Minnesota, 1993</b>
+      &mdash; an individually designed major across information technology, biotechnology and
+      artificial intelligence, thirty years before the current wave. He builds these systems for a
+      living, is not a futurist, and is not selling anything from the stage. If an appliance is the
+      right answer for your organization we will say so afterwards, in private, and you are free to
+      ignore it.</p>
+
+    <div class="booking" id="booking">
+      <h3>Book a session</h3>
+      <p>Pick the session, give us two dates, and we reply within one business day with a confirmation
+        and the invoice. No deposit.</p>
+      <form id="bookingForm" onsubmit="handleBooking(event)">
+        <div class="grid2">
+          <div><label for="bkName">Your name</label><input id="bkName" name="name" type="text" required></div>
+          <div><label for="bkEmail">Email</label><input id="bkEmail" name="email" type="email" required></div>
+          <div><label for="bkOrg">Organisation</label><input id="bkOrg" name="organisation" type="text" required></div>
+          <div><label for="bkSession">Session</label>
+            <select id="bkSession" name="session" required>
+              <option value="">Choose one</option>
+              <option>The AI Age, For the Layman &mdash; 50 min</option>
+              <option>Superintelligence for the People &mdash; 75 min evening</option>
+              <option>Ask It Yourself &mdash; 90 min workshop</option>
+              <option>Make It Yourself &mdash; 90 min workshop</option>
+              <option>Run Your Own &mdash; half day</option>
+              <option>The series &mdash; all four</option>
+              <option>Staff edition</option>
+              <option>Not sure yet</option>
+            </select></div>
+          <div><label for="bkDate">Preferred date</label><input id="bkDate" name="preferred_date" type="date"></div>
+          <div><label for="bkDate2">Second choice</label><input id="bkDate2" name="second_date" type="date"></div>
+          <div><label for="bkSize">Expected audience</label><input id="bkSize" name="audience_size" type="number" min="1" placeholder="e.g. 40"></div>
+          <div><label for="bkRate">Rate</label>
+            <select id="bkRate" name="rate">
+              <option>Community or congregation</option>
+              <option>Campus, library or professional</option>
+              <option>We cannot pay; hosting for costs</option>
+            </select></div>
+          <div class="full"><label for="bkRoom">Room, tech, and anything we should know</label>
+            <textarea id="bkRoom" name="notes" placeholder="Where it is, what screen and internet you have, whether it is online or in person, and who the room will be."></textarea></div>
+        </div>
+        <button type="submit" class="btn btn-primary" id="bookingSubmitBtn">Send the booking request</button>
+        <p id="bookingError" class="note" style="display:none;color:var(--accent-warm)"></p>
+        <p class="note">Or write to <a href="mailto:booking@overgroundrailroad.live">booking@overgroundrailroad.live</a>.
+          <a href="band/site/speaking-ai.html">The one-sheet</a> has all of this on one page for forwarding.</p>
+      </form>
     </div>
   </div>
 </section>
-
 
 <section id="contact">
   <div class="wrap">
@@ -1206,7 +1346,7 @@
         </select>
         <select name="enquiry">
             <option value="">What is this about?</option>
-            <option>Booking the talk &mdash; The AI Age, For the Layman</option>
+            <option>Booking a session &mdash; AI for the Layman</option>
             <option>An AI appliance for our organization</option>
             <option>Archive digitisation &mdash; putting our records online</option>
             <option>Something else</option>
@@ -1507,6 +1647,45 @@
       errorEl.style.display = 'block';
     }
   }
+
+  // Booking requests from the AI for the Layman section: same FormSubmit inbox, its own subject line.
+  async function handleBooking(e){
+    e.preventDefault();
+    const form = e.target;
+    const btn = document.getElementById('bookingSubmitBtn');
+    const errorEl = document.getElementById('bookingError');
+    const f = n => (form.elements[n] && form.elements[n].value) || '';
+    const payload = {
+      name: f('name'), email: f('email'), organisation: f('organisation'), session: f('session'),
+      preferred_date: f('preferred_date'), second_date: f('second_date'), audience_size: f('audience_size'),
+      rate: f('rate'), notes: f('notes'),
+      _subject: 'Booking request: ' + (f('session') || 'AI for the Layman') + ' / ' + f('organisation')
+    };
+    btn.disabled = true; btn.textContent = 'Sending...'; errorEl.style.display = 'none';
+    try {
+      const res = await fetch(CONTACT_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if(!res.ok) throw new Error('Request failed: ' + res.status);
+      form.parentElement.innerHTML = '<h3>Thank you.</h3><p>We have the request and will reply within one business day with a confirmation and the invoice.</p>';
+    } catch(err){
+      btn.disabled = false; btn.textContent = 'Send the booking request';
+      errorEl.textContent = "Something went wrong sending this. Email booking@overgroundrailroad.live and we will get right back to you.";
+      errorEl.style.display = 'block';
+    }
+  }
+
+  // "Copy the listing": a paste-ready paragraph for a host's calendar or newsletter.
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('.listing-btn'); if (!b) return;
+    const src = document.getElementById('listing-' + b.dataset.listing); if (!src) return;
+    const text = src.value.trim(); const was = b.textContent;
+    try { await navigator.clipboard.writeText(text); b.textContent = 'Copied. Paste it into your listing.'; }
+    catch (err) { window.prompt('Copy this listing:', text); }
+    setTimeout(() => { b.textContent = was; }, 2600);
+  });
 </script>
 
 </body>

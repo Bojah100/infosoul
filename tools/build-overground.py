@@ -63,11 +63,21 @@ else {''', "boot call")
 swap("<title>Agent Lockhart — Clay Film Edition</title>",
      "<title>Overground — a tour of the Milky Way · Infosoul Laboratories</title>", "title")
 
+# 2b. the loading card says OVERGROUND, not LOADING; the game's name bars stay out of sight
+swap('''<div id="loading">
+  <div>LOADING</div>
+  <div id="loadTrack"><div id="loadFill"></div></div>
+  <div id="loadLabel">warming up</div>''',
+'''<div id="loading">
+  <div>OVERGROUND</div>
+  <div id="loadTrack"><div id="loadFill"></div></div>
+  <div id="loadLabel">building the sky</div>''', "loading card")
+
 hook = '''
 <!-- INFOSOUL DEEP LINK START -->
 <style>
 /* infosoullaboratories.com hosts this page as OVERGROUND only: the sky, not the game. */
-body:not(.overground) #overlay { visibility: hidden !important; }
+body:not(.overground) #overlay, body:not(.overground) .hud, body:not(.overground) #pad { visibility: hidden !important; }
 #ogList button.home, #ogHint { display: none !important; }
 body.overground .hud, body.overground #board, body.overground #pad, body.overground #boutCard { display: none !important; }
 </style>
@@ -121,8 +131,12 @@ g = g.replace("</body>", N(hook), 1)
 a = g.index("<!-- OVERGROUND START -->"); b = g.index("<!-- OVERGROUND END -->")
 mod = g[a:b]
 def swap_mod(old, new, what):
+    """Apply a timing change, or accept it if the source build already carries it."""
     global mod
     n = mod.count(old)
+    if n == 0 and new.split(" /*")[0] in mod:
+        print(f"  {what}: already slow in the source build")
+        return
     assert n == 1, f"{what}: expected one match in the Overground module, found {n}"
     mod = mod.replace(old, new, 1)
 swap_mod("dur: clamp(2.6 + dist / 320, 3, 10)",

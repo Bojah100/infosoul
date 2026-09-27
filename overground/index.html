@@ -651,9 +651,9 @@ body.cinema-view.playing .hud{opacity:0!important}
 <div id="rotate"><div class="ph"></div>TURN THE PHONE
   <p>Agent Lockhart fights across the screen, not up and down it. Hold it sideways.</p></div>
 <div id="loading">
-  <div>LOADING</div>
+  <div>OVERGROUND</div>
   <div id="loadTrack"><div id="loadFill"></div></div>
-  <div id="loadLabel">warming up</div>
+  <div id="loadLabel">building the sky</div>
 </div>
 
 <script>
@@ -43977,7 +43977,7 @@ else {
   const from = rocket.getWorldPosition(new THREE.Vector3());
   if (OG.deepOn) leaveDeep();
   const dest = standoff(t, from), dist = from.distanceTo(dest);
-  OG.flight = { from: from, to: dest, t: 0, dur: clamp(8 + dist / 22, 9, 32) /* INFOSOUL: a tour, not a dash -- the moon in ten seconds, Pluto in half a minute */, target: t, lift: OG.state === "deck" };
+  OG.flight = { from: from, to: dest, t: 0, dur: clamp(8 + dist / 22, 9, 32) /* a tour, not a dash: the moon in ten seconds, Pluto in half a minute */, target: t, lift: OG.state === "deck" };
   OG.target = t;
   if (OG.state === "deck") { scene.attach(rocket); OG.state = "lift"; OG.t = 0; }
   else OG.state = "fly";
@@ -43990,7 +43990,7 @@ else {
   const from = rocket.getWorldPosition(new THREE.Vector3());
   const c = (typeof CENTER !== "undefined") ? CENTER : { x: 0, y: 0 };
   const dest = new THREE.Vector3(c.x, 14, c.y - 2.5);
-  OG.flight = { from: from, to: dest, t: 0, dur: clamp(6 + from.distanceTo(dest) / 30, 8, 24) /* INFOSOUL */, target: null, home: true };
+  OG.flight = { from: from, to: dest, t: 0, dur: clamp(6 + from.distanceTo(dest) / 30, 8, 24), target: null, home: true };
   OG.target = null; OG.state = "fly"; list(); card(null);
  }
  function deep(t) {
@@ -44032,7 +44032,7 @@ else {
    return;
   }
   if (S === "lift") {
-   OG.t += dt; const u = clamp(OG.t / 4.5, 0, 1); /* INFOSOUL: a slower lift-off */
+   OG.t += dt; const u = clamp(OG.t / 4.5, 0, 1); /* a slower lift-off */
    const F = OG.flight; const R = F.from;
    rocket.position.set(R.x, R.y + 14 * u * u, R.z); rocket.quaternion.identity();
    flame.visible = true; flame.scale.set(0.6 + 0.4 * Math.random(), 1.4 + 1.6 * u + 0.4 * Math.random(), 1);
@@ -44063,7 +44063,7 @@ else {
    return;
   }
   if (S === "land") {
-   OG.t += dt; const u = clamp(OG.t / 6, 0, 1); /* INFOSOUL: a slower warp */
+   OG.t += dt; const u = clamp(OG.t / 6, 0, 1); /* a slower warp */
    const top = OG.flight.to;
    rocket.position.set(top.x, top.y - (top.y - 0.06) * ease(u), top.z); rocket.quaternion.identity();
    flame.visible = u < 0.9; flame.scale.set(0.6, 1.2 + (1 - u), 1);
@@ -44074,7 +44074,7 @@ else {
   if (S === "warp") {
    if (!OG.warpP) { OG.warpP = camera.position.clone(); OG.warpQ = camera.quaternion.clone(); }
    camera.position.copy(OG.warpP); camera.quaternion.copy(OG.warpQ);
-   OG.t += dt; const u = clamp(OG.t / 3.2, 0, 1); /* INFOSOUL: a slower landing */
+   OG.t += dt; const u = clamp(OG.t / 3.2, 0, 1); /* a slower landing */
    flame.visible = true;
    fadeEl.style.opacity = String(u < 0.5 ? ease(u / 0.5) : 1);
    if (u >= 1) {
@@ -46429,7 +46429,7 @@ else {
 <!-- INFOSOUL DEEP LINK START -->
 <style>
 /* infosoullaboratories.com hosts this page as OVERGROUND only: the sky, not the game. */
-body:not(.overground) #overlay { visibility: hidden !important; }
+body:not(.overground) #overlay, body:not(.overground) .hud, body:not(.overground) #pad { visibility: hidden !important; }
 #ogList button.home, #ogHint { display: none !important; }
 body.overground .hud, body.overground #board, body.overground #pad, body.overground #boutCard { display: none !important; }
 </style>

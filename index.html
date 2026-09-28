@@ -1205,7 +1205,7 @@
 
     <div class="ladder">
       <div class="session">
-        <div class="kicker">The talk &middot; step one</div>
+        <div class="kicker">AI 101 &middot; the talk</div>
         <h3>The AI Age, For the Layman<small>50 min class or lunch slot &middot; 75 min evening edition, <i>Superintelligence for the People</i></small></h3>
         <p>What AI is, what it gets wrong, who owns it, and what a room of ordinary people can run
           themselves. The evening edition takes the word <i>superintelligence</i> apart: what is
@@ -1220,7 +1220,7 @@
       </div>
 
       <div class="session">
-        <div class="kicker">Workshop &middot; step two</div>
+        <div class="kicker">AI 201 &middot; workshop</div>
         <h3>Ask It Yourself<small>90 min, hands-on</small></h3>
         <p>The room puts its own questions to a model, watches it get one wrong, and learns how to
           check. Laptops or phones, or two to a screen.</p>
@@ -1234,7 +1234,7 @@
       </div>
 
       <div class="session">
-        <div class="kicker">Workshop &middot; step three</div>
+        <div class="kicker">AI 202 &middot; workshop</div>
         <h3>Make It Yourself<small>90 min, the generative one</small></h3>
         <p>Everyone makes something real for their organisation: the newsletter, the flyer, the grant
           paragraph, the announcement in two languages and in a spoken voice. <b>Built in advance from
@@ -1250,7 +1250,7 @@
       </div>
 
       <div class="session">
-        <div class="kicker">Build &middot; step four</div>
+        <div class="kicker">AI 301 &middot; build</div>
         <h3>Run Your Own<small>Half day</small></h3>
         <p>Install an open-source model from Hugging Face or the Ollama library on your
           organisation&rsquo;s own laptop and leave with it working. No subscription, and nothing
@@ -1264,10 +1264,28 @@
         <textarea hidden id="listing-run">Run Your Own: a half-day session. Install a free, open-source AI model on your own laptop and leave with it working. No subscription, no company reading your work. With Brock Satter, Infosoul Laboratories. Limited to 12; bring a laptop and its charger.</textarea>
       </div>
 
+      <div class="session">
+        <div class="kicker">AI 401 &middot; agents</div>
+        <h3>Give It Hands<small>Half day, for staff and committees</small></h3>
+        <p>Agents, the socket and the foreman, in plain words: a script running in the machine&rsquo;s
+          window, the standard plug (MCP) that lets it reach your files, and the software that runs
+          several of them on a job. Then the practical part: connect the model you run to one of your
+          own folders, <b>read-only</b>, and decide as a group what it may touch, who checks, and what
+          it may never do.</p>
+        <ul class="facts">
+          <li><b>Room</b> &mdash; up to 12, each with a laptop. Best after 301.</li>
+          <li><b>Leaves with</b> &mdash; a working read-only agent on your own machine, and a written
+            policy: what it can touch, who checks, whose machine.</li>
+        </ul>
+        <div class="price">$1,200 <span>community and congregations</span>$3,500 <span>campus, library and professional</span></div>
+        <button class="listing-btn" type="button" data-listing="hands">Copy the listing for your calendar</button>
+        <textarea hidden id="listing-hands">Give It Hands: a half-day session on AI agents for people who are not engineers. What an agent actually is, what the standard plug called MCP lets it reach, and what "multi-agent" means; then connect a free, open-source model on your own laptop to one of your own folders, read-only, and write down as a group what it may touch and who checks. With Brock Satter, Infosoul Laboratories. Limited to 12; bring a laptop.</textarea>
+      </div>
+
       <div class="session wide">
         <div>
-          <div class="kicker">The series</div>
-          <h3>All four, in order<small>Across a month, for a library, congregation or local</small></h3>
+          <div class="kicker">The series &middot; 101 to 301</div>
+          <h3>The talk, the workshops, the build<small>Across a month, for a library, congregation or local; 401 when the room is ready</small></h3>
           <p>The talk, then the two workshops, then the build. The room that heard the explanation
             is the room that leaves running its own machine.</p>
           <div class="price">Quoted <span>from the session prices, less for the set</span></div>
@@ -1349,12 +1367,13 @@
           <div><label for="bkSession">Session</label>
             <select id="bkSession" name="session" required>
               <option value="">Choose one</option>
-              <option>The AI Age, For the Layman &mdash; 50 min</option>
-              <option>Superintelligence for the People &mdash; 75 min evening</option>
-              <option>Ask It Yourself &mdash; 90 min workshop</option>
-              <option>Make It Yourself &mdash; 90 min workshop</option>
-              <option>Run Your Own &mdash; half day</option>
-              <option>The series &mdash; all four</option>
+              <option>AI 101 &mdash; The AI Age, For the Layman, 50 min</option>
+              <option>AI 101 &mdash; Superintelligence for the People, 75 min evening</option>
+              <option>AI 201 &mdash; Ask It Yourself, 90 min workshop</option>
+              <option>AI 202 &mdash; Make It Yourself, 90 min workshop</option>
+              <option>AI 301 &mdash; Run Your Own, half day</option>
+              <option>AI 401 &mdash; Give It Hands, half day</option>
+              <option>The series &mdash; 101 to 301</option>
               <option>Staff edition</option>
               <option>Not sure yet</option>
             </select></div>

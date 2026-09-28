@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glossary — AI for the Layman · Infosoul Laboratories</title>
+<meta name="description" content="The words in the catalogues and the words we use, side by side, each with one plain sentence. For anyone comparing an AI course, and for anyone in the room.">
+<style>
+  :root{--bg:#0b0d12;--alt:#12151d;--card:#171b25;--border:#262c3a;--text:#eef1f7;--dim:#9aa3b5;--accent:#6ee7c9;--accent-2:#8b93ff;--warm:#ffb86b;--radius:14px;--max:900px}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;line-height:1.6}
+  a{color:var(--accent)}
+  .wrap{max-width:var(--max);margin:0 auto;padding:40px 24px 80px}
+  .kicker{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-2);font-weight:700}
+  h1{font-size:2.1rem;line-height:1.15;margin:.3rem 0 .6rem}
+  h2{font-size:1.2rem;margin:2rem 0 .5rem;color:var(--accent)}
+  p{color:var(--dim)} p b{color:var(--text)}
+  .lede{font-size:1.05rem;max-width:70ch}
+  .entry{display:grid;grid-template-columns:190px 1fr;gap:.2rem 1.2rem;padding:.85rem 0;border-top:1px solid var(--border)}
+  .entry:last-child{border-bottom:1px solid var(--border)}
+  .term{font-weight:700;color:var(--text)}
+  .term small{display:block;font-weight:500;color:var(--accent-2);font-size:.78rem;margin-top:.1rem}
+  .def{color:var(--dim);font-size:.95rem}
+  .def b{color:var(--text)}
+  .def .where{display:block;font-size:.78rem;color:var(--accent);margin-top:.2rem}
+  .btn{display:inline-block;padding:12px 22px;border-radius:999px;font-weight:700;text-decoration:none;font-size:.92rem;margin:.4rem .5rem .4rem 0}
+  .btn-primary{background:linear-gradient(90deg,var(--accent),#52d2b0);color:#06120d}
+  .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+  .foot{margin-top:2.5rem;font-size:.85rem;color:var(--dim);border-top:1px solid var(--border);padding-top:1rem}
+  @media (max-width:560px){.entry{grid-template-columns:1fr}}
+  @media print{:root{--bg:#fff;--card:#fff;--border:#bbb;--text:#111;--dim:#333;--accent:#0a6e5a;--accent-2:#3b3f8f}body{background:#fff;color:#111}.btn{display:none}.entry{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Infosoul Laboratories · AI for the Layman</div>
+  <h1>Glossary</h1>
+  <p class="lede">The catalogues have a word for everything, and most of the words are hiding a plain idea. Here are the ones you will meet, with the catalogue word first, our word second, and one sentence that says what it is. Where a class covers it, the class is named. Nothing here needs any background.</p>
+
+  <h2>The thing itself</h2>
+  <div class="entry"><div class="term">Large language model, LLM<small>our word: the model, or the machine</small></div><div class="def">A very large table of "what usually comes next", made by reading most of what people have written. Given a run of text it guesses the next word, then the next. That is the whole thing.<span class="where">AI 101</span></div></div>
+  <div class="entry"><div class="term">Chatbot, assistant<small>our word: the chat window</small></div><div class="def">The product wrapped round a model: the friendly name, the typing animation, the company's terms. The model is the file; the chatbot is somebody's service built on it.<span class="where">AI 101</span></div></div>
+  <div class="entry"><div class="term">Training, inference<small>our words: making it, using it</small></div><div class="def">Training happens once, in warehouses, and produces a file of numbers. Using it (inference) is cheap enough to run a copy on a laptop. Nothing you type changes the file.<span class="where">AI 101 · 301</span></div></div>
+  <div class="entry"><div class="term">Parameters, "7B", "70B"<small>our word: the size</small></div><div class="def">How many numbers are in the file, in billions. A fair guide to how capable a model is and how much memory it needs: about 3B for 8 GB, 8B for 16, 30B and up for 32 or more.<span class="where">AI 301</span></div></div>
+  <div class="entry"><div class="term">Context window<small>our words: the conversation it can hold</small></div><div class="def">Everything in the conversation so far is sent with every message; inside that window it appears to remember, outside it nothing. Within the window it plainly learns from you; when the window closes, it forgets, unless the company kept notes.<span class="where">AI 101 · 201</span></div></div>
+  <div class="entry"><div class="term">Open source, open weights<small>our words: you can hold the file</small></div><div class="def">The laboratory published the file. You can download it, run it on your own machine, and nobody can meter it or read what you type into it. Hugging Face and the Ollama library are the two public shelves.<span class="where">AI 202 · 301</span></div></div>
+  <div class="entry"><div class="term">Benchmark, "passed the bar"<small>our words: the scores</small></div><div class="def">A test the machine has effectively already read is not a test. Ask: good at what, compared to whom, on questions it had not seen. Then give it a question from your own work.<span class="where">AI 101 · 201</span></div></div>
+  <div class="entry"><div class="term">Fine-tuning<small>our words: teaching it your house style, permanently</small></div><div class="def">Adjusting a model's numbers on your own examples so the change survives the conversation. Expensive, rarely needed; giving it your documents to read (below) usually does the job.<span class="where">not taught; we say when you would need it</span></div></div>
+
+  <h2>Getting it to work on your material</h2>
+  <div class="entry"><div class="term">Prompt engineering<small>our words: asking it properly</small></div><div class="def">Say who you are, what the thing is for, who will read it, how long, what to include and leave out, what it should sound like. Then the request. A one-line question gets a one-size answer.<span class="where">AI 201</span></div></div>
+  <div class="entry"><div class="term">Retrieval-augmented generation, RAG, grounding<small>our words: a second brain that answers back</small></div><div class="def">Giving the model your own documents to read before it answers, so it works from your minutes and letters rather than the pattern. The shared drive and the minutes binder, made to talk.<span class="where">AI 202 · 401</span></div></div>
+  <div class="entry"><div class="term">Vector database, embeddings<small>our words: the index</small></div><div class="def">How the second brain finds the right page fast: every passage is turned into a list of numbers that measures what it is about, so "the roof" finds the roof discussion even if nobody wrote the word.<span class="where">AI 401, in passing</span></div></div>
+  <div class="entry"><div class="term">Hallucination<small>our word: invention</small></div><div class="def">When the truth is rare or absent the machine does not stop; it produces what a true answer would look like, a citation, a docket number, a dosage. Not a fever; how it works.<span class="where">AI 101 · 201</span></div></div>
+  <div class="entry"><div class="term">Sycophancy<small>our word: flattery</small></div><div class="def">It agrees with you, and it was built to, by having people rate its answers. Ask it for the other side and the three biggest weaknesses.<span class="where">AI 101 · 201</span></div></div>
+  <div class="entry"><div class="term">Hallucination management, evaluation<small>our words: the habit</small></div><div class="def">Check the thing it was most sure about: the one claim in the answer that would cost you something if it were false.<span class="where">AI 201, and every class after</span></div></div>
+
+  <h2>When it gets hands</h2>
+  <div class="entry"><div class="term">Agent, agentic AI<small>our words: a script in the window</small></div><div class="def">Standing instructions put in front of the model: here is your job, here are your tools, here is how to decide, keep going. The model only runs it; the tools are the hands; the loop is what makes it feel alive.<span class="where">AI 401</span></div></div>
+  <div class="entry"><div class="term">Tool use, function calling<small>our word: the hands</small></div><div class="def">The buttons an agent is allowed to press: search, open, read, fill in, send, run. Permission, not magic.<span class="where">AI 401</span></div></div>
+  <div class="entry"><div class="term">Model Context Protocol, MCP<small>our word: the socket</small></div><div class="def">A common plug, published as an open standard in November 2024 and since adopted across the industry, that lets any model connect to any tool or store of information. How the machine gets into your records, and how your own machine can be handed your own files.<span class="where">AI 401</span></div></div>
+  <div class="entry"><div class="term">Orchestration, multi-agent, A2A<small>our word: the foreman</small></div><div class="def">Software that breaks a job into steps, hands each to a model or agent, checks what comes back, sends the bad ones round again. What "AI employee" usually means. Each step trusts the one before it.<span class="where">AI 401, explained, not built</span></div></div>
+  <div class="entry"><div class="term">Harness<small>our words: the script and the loop, bare</small></div><div class="def">The minimum that turns a model into an agent. Pi is one: four tools and a page of instructions, and the engine inside OpenClaw. Hermes Agent is a harness with a memory.<span class="where">AI 401</span></div></div>
+  <div class="entry"><div class="term">Human-in-the-loop, HITL, permission gates<small>our words: a person between the decision and the act</small></div><div class="def">Read-only hands first. The power to send, pay or delete last, if ever, and never without a person in between.<span class="where">AI 401</span></div></div>
+  <div class="entry"><div class="term">Prompt injection<small>our words: hidden instructions</small></div><div class="def">A sentence inside a document or email that is addressed to the machine, which it may obey instead of you. With a chatbot, a curiosity; with an agent that can send, the whole problem.<span class="where">AI 201 · 401</span></div></div>
+  <div class="entry"><div class="term">API, GraphQL<small>our words: the door, the query door</small></div><div class="def">How software asks a system a question. GraphQL is one style of door that returns exactly the fields you asked for. A well-organised store can be asked precisely; a badly organised one cannot, and no model fixes that.<span class="where">AI 401, in passing</span></div></div>
+  <div class="entry"><div class="term">Second brain<small>our words: the same, and we mean the shared drive</small></div><div class="def">Everything the organisation knows in one searchable place, from a 2022 book by Tiago Forte. With a local model reading it, it answers back, read-only, and nothing leaves the building.<span class="where">AI 202 · 401</span></div></div>
+
+  <h2>Who owns it</h2>
+  <div class="entry"><div class="term">Cloud, API access, subscription<small>our words: somebody else's computer</small></div><div class="def">The chat window and the service behind it live on the company's machines, under the company's terms, with the company's record of what you said. Rent it when you truly need the largest model; build nothing on it you could not walk away from on a Tuesday.<span class="where">AI 101</span></div></div>
+  <div class="entry"><div class="term">Self-hosted, on-premises, local<small>our words: your own machine, in the building</small></div><div class="def">The file runs on a laptop you own. No subscription, no company reading your work, nothing leaves the room. Slower, a little dumber, yours.<span class="where">AI 301 · 401</span></div></div>
+  <div class="entry"><div class="term">Responsible AI, AI ethics<small>our words: what is worth arguing about</small></div><div class="def">In the catalogues this means bias and hallucination. We add the data, the electricity and water, the contract language, the confidence a machine cannot keep, and whose machine it is. Not worth arguing about: whether it is "really" intelligent.<span class="where">AI 101</span></div></div>
+  <div class="entry"><div class="term">Continuing-education unit, CEU<small>our words: ten contact hours</small></div><div class="def">The unit colleges use to count organised instruction. The five classes together are about eleven contact hours, roughly one unit. Credit through a partner college on request.<span class="where">the set</span></div></div>
+
+  <p style="margin-top:1.8rem">
+    <a class="btn btn-primary" href="../syllabus/">The syllabus</a>
+    <a class="btn btn-ghost" href="../#booking">Book a class</a>
+    <a class="btn btn-ghost" href="../#talk">Back to AI for the Layman</a>
+  </p>
+  <div class="foot">Infosoul Laboratories · Salem, Massachusetts · <a href="../">infosoullaboratories.com</a> · booking@overgroundrailroad.live</div>
+</div>
+</body>
+</html>

@@ -487,6 +487,7 @@
     #talk .booking .note{margin:.7rem 0 0;font-size:.8rem;color:var(--text-dim)}
     #talk .bookad{margin-top:1.4rem;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem 1.5rem;display:grid;grid-template-columns:auto 1fr;gap:1.4rem 1.8rem;align-items:start}
     #talk .bookad .cover{width:150px;aspect-ratio:5/8;border-radius:6px;background:linear-gradient(160deg,#1f2536,#0f121a);border:1px solid var(--border);box-shadow:14px 14px 32px -16px rgba(0,0,0,.8), inset 6px 0 0 rgba(110,231,201,.55);padding:16px 14px 14px 20px;display:flex;flex-direction:column;justify-content:space-between;color:var(--text)}
+    #talk .bookad img.cover{padding:0;display:block;height:auto;object-fit:cover;box-shadow:14px 14px 32px -16px rgba(0,0,0,.8)}
     #talk .bookad .cover .t{font-weight:800;font-size:1rem;line-height:1.15;letter-spacing:.01em}
     #talk .bookad .cover .t span{display:block;color:var(--accent);font-weight:600;font-size:.85rem;margin-top:.25rem}
     #talk .bookad .cover .a{font-size:.68rem;color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase}
@@ -1228,6 +1229,25 @@
       </div>
 
       <div class="session">
+        <div class="kicker">AI 101 &middot; for your department</div>
+        <h3>Every Field, For the Layman<small>50 min, one field at a time</small></h3>
+        <p>The same talk, asked of one field. The second book in the series puts six questions to
+          every discipline in the catalogue: what the machine already does here, what it cannot do here
+          and why, what it changes about what the field <i>is</i>, who owns it here, what happens to the
+          people, and what the field&rsquo;s people should do, ending in a line for Monday and a line for
+          the argument. <b>Fifty-one fields</b>, from mathematics and medicine to law, history, music and
+          the trades. A campus can book it for the history department, the nursing school and the law
+          faculty in one week, and each room hears its own. Ask for the entry as the listing.</p>
+        <ul class="facts">
+          <li><b>Room</b> &mdash; a department, a school, a programme&rsquo;s students and faculty together.</li>
+          <li><b>Leaves with</b> &mdash; the entry for the field, and the one-page guide.</li>
+        </ul>
+        <div class="price">$500 <span>community and congregations</span>$1,500 <span>campus, library and professional</span></div>
+        <button class="listing-btn" type="button" data-listing="field">Copy the listing for your calendar</button>
+        <textarea hidden id="listing-field">Every Field, For the Layman: [your field]. A fifty-minute plain-language talk that asks what the machines do to one field in particular: what they already do here, what they cannot, what they change about what the field is, who owns it here, what happens to the people who work in it, and what to do on Monday. For students, faculty and anyone who depends on the field. With Brock Satter, Director of Infosoul Laboratories. No background assumed.</textarea>
+      </div>
+
+      <div class="session">
         <div class="kicker">AI 201 &middot; workshop</div>
         <h3>Ask It Yourself<small>90 min, hands-on</small></h3>
         <p>The room puts its own questions to a model, watches it get one wrong, and learns how to
@@ -1349,13 +1369,11 @@
       ignore it.</span></p>
 
     <div class="bookad" id="book">
-      <div class="cover" aria-hidden="true">
-        <div class="s">For the Layman &middot; 1</div>
-        <div class="t">The AI Age,<span>For the Layman.</span></div>
-        <div class="a">Brock Satter</div>
-      </div>
+      <img class="cover" src="media/cover-ai-age-300.png" srcset="media/cover-ai-age-300.png 1x, media/cover-ai-age.png 2x" width="150" height="240"
+        alt="Front cover of The AI Age, For the Layman, by Brock Satter"
+        onerror="this.outerHTML='<div class=&quot;cover&quot; aria-hidden=&quot;true&quot;><div class=&quot;s&quot;>For the Layman &middot; 1</div><div class=&quot;t&quot;>The AI Age,<span>For the Layman.</span></div><div class=&quot;a&quot;>Brock Satter</div></div>'">
       <div>
-        <h3>The book: the talk, written down<small>Coming soon &middot; about 80 pages &middot; paperback and ebook</small></h3>
+        <h3>The book: the talk, written down<small>Coming soon &middot; about a hundred pages &middot; paperback and ebook</small></h3>
         <p>Seven short chapters, one sitting: why it arrived all at once; the tech, only as far as the
           questions need it; <b>the questions</b>, thought, creativity, consciousness and life, with
           three discoveries of this moment and the implications nobody has discussed; using it, with
@@ -1369,9 +1387,11 @@
           <button type="submit" class="btn btn-primary" id="bookListBtn">Tell me when it is out</button>
         </form>
         <p class="fine" id="bookListNote">One email when it is published. Nothing else.</p>
-        <div class="next"><b>Next in the series:</b> <i>The Feed, For the Layman</i> &mdash; who pays a
-          podcast, how a creator became the mainstream, and how a library, a local or a congregation
-          reaches its own people now.</div>
+        <div class="next"><b>Next in the series:</b> <i>Every Field, For the Layman</i> &mdash; what the
+          machines do to each thing we know, department by department. Fifty-one fields, from mathematics
+          to the trades, each asked the same six questions, each ending in a line for Monday. Then
+          <i>The Feed, For the Layman</i> &mdash; who pays a podcast, how a creator became the mainstream,
+          and how a library, a local or a congregation reaches its own people now.</div>
       </div>
     </div>
 
@@ -1389,6 +1409,7 @@
               <option value="">Choose one</option>
               <option>AI 101 &mdash; The AI Age, For the Layman, 50 min</option>
               <option>AI 101 &mdash; Superintelligence for the People, 75 min evening</option>
+              <option>AI 101 &mdash; Every Field, for your department, 50 min</option>
               <option>AI 201 &mdash; Ask It Yourself, 90 min workshop</option>
               <option>AI 202 &mdash; Make It Yourself, 90 min workshop</option>
               <option>AI 301 &mdash; Run Your Own, half day</option>

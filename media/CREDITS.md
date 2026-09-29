@@ -15,3 +15,17 @@ The four photographs in the "AI for the Layman" section ("the rooms it is built 
   https://commons.wikimedia.org/wiki/File:FEMA_-_35786_-_Town_hall_meeting_in_Iowa.jpg
 
 Licence texts: https://creativecommons.org/licenses/by/2.0/ · https://creativecommons.org/licenses/by/4.0/ · https://creativecommons.org/publicdomain/zero/1.0/
+
+## Inside the book (media/book/)
+
+Six pictures from *The AI Age, For the Layman*, resized for the web. Diagrams, the chart and the terminal session are by the author.
+
+- **turing-1951.jpg** — "Alan Turing (1951)", by Elliott & Fry. Public domain.
+  https://commons.wikimedia.org/wiki/File:Alan_Turing_(1951).jpg
+- **apple-iic.jpg** — "Apple IIc with monitor", by Bilby. CC BY 3.0. Resized.
+  https://commons.wikimedia.org/wiki/File:Apple_IIc_with_monitor.jpg
+- **vortex-street.jpg** — "Karman vortex street off Alejandro Selkirk Island", by NASA. Public domain. Resized.
+  https://commons.wikimedia.org/wiki/File:Karman_vortex_street_off_Alejandro_Selkirk_Island.jpg
+- **storehouse.png, africa-compute.png, terminal-foot.png** — by Brock Satter, Infosoul Laboratories.
+
+The full list of the book's illustrations and licences is in the book's own credits page. Licence text: https://creativecommons.org/licenses/by/3.0/

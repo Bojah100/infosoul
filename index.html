@@ -502,6 +502,17 @@
     #talk .bookad input{flex:1;min-width:200px;box-sizing:border-box;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:999px;padding:.7rem 1rem;font:inherit;font-size:.92rem}
     #talk .bookad .btn{padding:12px 20px;font-size:.88rem}
     #talk .bookad .fine{font-size:.76rem;color:var(--text-dim);margin:.5rem 0 0}
+    #talk .bookad .inside{grid-column:1/-1;margin-top:.2rem;padding-top:1rem;border-top:1px dashed var(--border)}
+    #talk .bookad .inside h4{margin:0 0 .75rem;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-2)}
+    #talk .bookad .inside-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem 1.1rem}
+    #talk .bookad .inside figure{margin:0}
+    #talk .bookad .inside img{width:100%;height:170px;object-fit:cover;border-radius:6px;border:1px solid var(--border);display:block;background:#fff}
+    #talk .bookad .inside img.diagram{object-fit:contain;padding:6px;box-sizing:border-box}
+    #talk .bookad .inside figcaption{font-size:.78rem;color:var(--text-dim);line-height:1.45;margin-top:.45rem}
+    #talk .bookad .inside figcaption b{color:var(--text);display:block;font-size:.8rem}
+    #talk .bookad .inside .fine a{color:var(--accent)}
+    @media (max-width:720px){ #talk .bookad .inside-grid{grid-template-columns:repeat(2,minmax(0,1fr))} #talk .bookad .inside img{height:130px} }
+    @media (max-width:720px){ .badge-fit{white-space:normal;max-width:100%;box-sizing:border-box} }
     @media (max-width:560px){#talk .bookad{grid-template-columns:1fr}#talk .bookad .cover{width:120px}}
   </style>
 </head>
@@ -1374,7 +1385,7 @@
         alt="Front cover of The AI Age, For the Layman, by Brock Satter"
         onerror="this.outerHTML='<div class=&quot;cover&quot; aria-hidden=&quot;true&quot;><div class=&quot;s&quot;>For the Layman &middot; 1</div><div class=&quot;t&quot;>The AI Age,<span>For the Layman.</span></div><div class=&quot;a&quot;>Brock Satter</div></div>'">
       <div>
-        <h3>The book: the talk, written down<small>Coming soon &middot; about a hundred pages &middot; paperback and ebook</small></h3>
+        <h3>The book: the talk, written down<small>Coming soon &middot; about 120 illustrated pages &middot; paperback and ebook</small></h3>
         <p>Seven questions, one to a chapter, read in one sitting. Why did it arrive all at once?
           What is it? <b>What does it mean?</b> What is it good for? When should you not believe it?
           Whose is it? <b>Can you have your own?</b> The one-page guide is the appendix.</p>
@@ -1391,6 +1402,24 @@
           <i>The Feed, For the Layman</i> &mdash; who pays a podcast, how a creator became the mainstream,
           and how a library, a local or a congregation reaches its own people now.</div>
       </div>
+        <div class="inside" aria-label="Inside the book">
+          <h4>Inside the book</h4>
+          <div class="inside-grid">
+            <figure><a href="media/book/turing-1951.jpg"><img src="media/book/turing-1951.jpg" alt="Alan Turing in 1951" loading="lazy" width="560" height="747"></a>
+              <figcaption><b>1 &middot; Why did it arrive all at once?</b>Seventy years, from Turing&rsquo;s question in 1950.</figcaption></figure>
+            <figure><a href="media/book/apple-iic.jpg"><img src="media/book/apple-iic.jpg" alt="An Apple IIc computer with its monitor" loading="lazy" width="560" height="560"></a>
+              <figcaption><b>1985</b>An Apple IIc and a box of disks: the author&rsquo;s first rules engines, in BASIC.</figcaption></figure>
+            <figure><a href="media/book/storehouse.png"><img class="diagram" src="media/book/storehouse.png" alt="Diagram: the storehouse, the bridge and the directive" loading="lazy" width="640" height="760"></a>
+              <figcaption><b>2 &middot; What is it?</b>The storehouse, the bridge and the directive: where the intelligence lives.</figcaption></figure>
+            <figure><a href="media/book/vortex-street.jpg"><img src="media/book/vortex-street.jpg" alt="Satellite image of whirlpools in the clouds behind an island" loading="lazy" width="560" height="483"></a>
+              <figcaption><b>3 &middot; What does it mean?</b>Everything that flows, and what it means to solve its equations.</figcaption></figure>
+            <figure><a href="media/book/africa-compute.png"><img class="diagram" src="media/book/africa-compute.png" alt="Chart: Africa has 18 per cent of the world's people and 0.6 per cent of its data-centre capacity" loading="lazy" width="640" height="330"></a>
+              <figcaption><b>6 &middot; Whose is it?</b>The rest of the world: one person in five, less than one per cent of the machines.</figcaption></figure>
+            <figure><a href="media/book/terminal-foot.png"><img class="diagram" src="media/book/terminal-foot.png" alt="A terminal session with a small local model answering a question" loading="lazy" width="640" height="380"></a>
+              <figcaption><b>7 &middot; Can you have your own?</b>A real session on the author&rsquo;s laptop, 28 September 2026.</figcaption></figure>
+          </div>
+          <p class="fine">Photographs from Wikimedia Commons: Alan Turing, Elliott &amp; Fry, public domain; Apple IIc, Bilby, CC BY 3.0; clouds off Alejandro Selkirk Island, NASA, public domain. Diagrams by the author. <a href="media/CREDITS.md">All credits</a>.</p>
+        </div>
     </div>
 
     <div class="booking" id="booking">

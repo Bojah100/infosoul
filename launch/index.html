@@ -131,6 +131,9 @@ async function unlock(passphrase, quiet){
     Q = await decrypt(passphrase.trim());
     try { sessionStorage.setItem(KEY + '-p', passphrase.trim()); } catch(e){}
     try { S = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e){ S = {}; }
+    // the record kept inside the encrypted queue (what was sent, started and submitted) fills whatever this browser has not marked
+    for(const id in (Q.record || {})){ const cur = st(id), inc = Q.record[id]; for(const k in inc){ if(cur[k] === undefined || cur[k] === null || cur[k] === '') cur[k] = inc[k]; } }
+    save();
     $('lock').classList.add('hide'); $('deck').classList.remove('hide'); $('pass').value = '';
     render();
   } catch(err){
@@ -206,7 +209,7 @@ function card(it, i){
         <button data-act="reply" data-v="yes" class="${s.reply === 'yes' ? 'on' : ''}">Library said yes</button>
         <button data-act="reply" data-v="no" class="bad ${s.reply === 'no' ? 'on' : ''}">Library said no</button>
       </div>
-      <label>Track the application</label>
+      <label>Track the application${s.appno ? ' · ' + esc(s.appno) : ''}</label>
       <div class="row">
         <button data-act="appstarted" class="warn ${s.appStarted ? 'on' : ''}">${s.appStarted ? 'Started ✓' : 'Mark application started'}</button>
         <button data-act="applied" class="warn ${s.applied ? 'on' : ''}">${s.applied ? 'Submitted ✓ ' + esc(new Date(s.applied).toLocaleString([], {weekday: 'short', hour: 'numeric', minute: '2-digit'})) : 'Mark application submitted'}</button>

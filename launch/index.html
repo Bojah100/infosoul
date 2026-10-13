@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Launch deck · Infosoul Laboratories</title>
+<style>
+  :root{--bg:#0b0d12;--alt:#12151d;--card:#171b25;--border:#262c3a;--text:#eef1f7;--dim:#9aa3b5;--accent:#6ee7c9;--accent-2:#8b93ff;--warm:#ffb86b;--bad:#ff8a8a;--radius:12px}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;line-height:1.5}
+  a{color:var(--accent)}
+  .wrap{max-width:980px;margin:0 auto;padding:28px 16px 80px}
+  .kicker{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-2);font-weight:700}
+  h1{font-size:1.7rem;margin:.2rem 0 .3rem;line-height:1.2}
+  p{color:var(--dim);margin:.4rem 0}
+  button,.btn{font:inherit;font-size:.86rem;font-weight:600;border-radius:999px;border:1px solid var(--border);background:var(--alt);color:var(--text);padding:7px 14px;cursor:pointer;text-decoration:none;display:inline-block}
+  button:hover,.btn:hover{border-color:var(--accent)}
+  button.primary,.btn.primary{background:linear-gradient(90deg,var(--accent),#52d2b0);color:#06120d;border-color:transparent}
+  button.on{background:var(--accent);color:#06120d;border-color:transparent}
+  button.warn.on{background:var(--warm)} button.bad.on{background:var(--bad)}
+  input[type=password],input[type=text],textarea{font:inherit;width:100%;background:var(--alt);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:9px 11px}
+  textarea{min-height:230px;font-size:.9rem;line-height:1.45;resize:vertical}
+  #lock{max-width:420px;margin:12vh auto 0;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px}
+  #lock button{margin-top:12px;width:100%}
+  .err{color:var(--bad);font-size:.88rem;min-height:1.3em;margin-top:8px}
+  .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;min-width:104px}
+  .stat b{display:block;font-size:1.35rem;line-height:1.1} .stat span{font-size:.74rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
+  .stat.deadline b{color:var(--warm)}
+  .filters{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 16px}
+  .item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin:10px 0;overflow:hidden}
+  .head{display:flex;gap:10px;align-items:center;padding:12px 14px;cursor:pointer;flex-wrap:wrap}
+  .head .n{color:var(--dim);font-size:.8rem;width:1.6em}
+  .head .t{font-weight:700;flex:1 1 220px} .head .t small{display:block;font-weight:500;color:var(--dim);font-size:.82rem}
+  .pill{font-size:.72rem;font-weight:700;border-radius:999px;padding:3px 10px;border:1px solid var(--border);color:var(--dim);white-space:nowrap}
+  .pill.sent{color:#06120d;background:var(--accent-2);border-color:transparent} .pill.yes{color:#06120d;background:var(--accent);border-color:transparent}
+  .pill.no{color:#06120d;background:var(--bad);border-color:transparent} .pill.applied{color:#06120d;background:var(--warm);border-color:transparent}
+  .pill.letter{color:var(--warm);border-color:var(--warm)}
+  .body{display:none;padding:4px 14px 16px;border-top:1px solid var(--border)} .item.open .body{display:block}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+  label{font-size:.74rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;display:block;margin:12px 0 4px}
+  .notes{font-size:.86rem;color:var(--dim);padding-left:1.1rem;margin:.3rem 0} .notes li{margin:.3rem 0}
+  .meta{font-size:.82rem;color:var(--dim)}
+  .foot{margin-top:2rem;font-size:.82rem;color:var(--dim);border-top:1px solid var(--border);padding-top:1rem}
+  .hide{display:none!important}
+  #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--accent);color:#06120d;font-weight:700;border-radius:999px;padding:8px 18px;opacity:0;transition:opacity .2s;pointer-events:none}
+  #toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="lock">
+    <div class="kicker">Infosoul Laboratories</div>
+    <h1>Launch deck</h1>
+    <p>Staging, sending and tracking booking requests. The queue is stored encrypted and opens only with the passphrase.</p>
+    <label for="pass">Passphrase</label>
+    <input type="password" id="pass" autocomplete="current-password">
+    <button class="primary" id="unlockBtn">Unlock</button>
+    <div class="err" id="lockErr"></div>
+  </div>
+
+  <div id="deck" class="hide">
+    <div class="kicker">Infosoul Laboratories · Launch deck</div>
+    <h1 id="campaign"></h1>
+    <p class="meta" id="sender"></p>
+    <div class="bar" id="stats"></div>
+    <div class="row">
+      <a class="btn primary" id="applyLink" target="_blank" rel="noopener">Open the grants system</a>
+      <button id="exportBtn">Back up my tracking</button>
+      <button id="importBtn">Restore a backup</button>
+      <button id="summaryBtn">Copy a status summary</button>
+      <button id="lockBtn">Lock</button>
+      <input type="file" id="importFile" accept="application/json" class="hide">
+    </div>
+    <p class="meta">Your marks and edits are saved in this browser only. Back them up before changing computer or clearing the browser. Sending happens in your own mail program: nothing is sent from this page.</p>
+    <div class="filters" id="filters"></div>
+    <div id="list"></div>
+    <div class="foot">Attach <b id="attach"></b> to every email. <a href="../">Back to the site</a></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+'use strict';
+const KEY = 'infosoul-launch-v1';
+let Q = null, S = {}, filter = 'all';
+const $ = id => document.getElementById(id);
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(t){ const el = $('toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 1400); }
+
+async function decrypt(passphrase){
+  const res = await fetch('queue.enc.json?' + Date.now(), {cache: 'no-store'});
+  if(!res.ok) throw new Error('The queue file could not be loaded.');
+  const e = await res.json();
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey({name: 'PBKDF2', salt: b64(e.salt), iterations: e.iter, hash: 'SHA-256'}, base, {name: 'AES-GCM', length: 256}, false, ['decrypt']);
+  const plain = await crypto.subtle.decrypt({name: 'AES-GCM', iv: b64(e.iv)}, key, b64(e.ct));
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+
+async function unlock(passphrase, quiet){
+  $('lockErr').textContent = quiet ? '' : 'Opening…';
+  try {
+    Q = await decrypt(passphrase.trim());
+    try { sessionStorage.setItem(KEY + '-p', passphrase.trim()); } catch(e){}
+    try { S = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e){ S = {}; }
+    $('lock').classList.add('hide'); $('deck').classList.remove('hide'); $('pass').value = '';
+    render();
+  } catch(err){
+    try { sessionStorage.removeItem(KEY + '-p'); } catch(e){}
+    $('lockErr').textContent = quiet ? '' : (err.name === 'OperationError' ? 'That passphrase did not open it.' : err.message);
+  }
+}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){ toast('Could not save in this browser'); } }
+const st = id => (S[id] = S[id] || {});
+const val = (it, f) => (st(it.id)[f] !== undefined ? st(it.id)[f] : it[f]);
+
+function state(it){
+  const s = st(it.id);
+  if(s.applied) return 'applied';
+  if(s.reply === 'yes') return 'yes';
+  if(s.reply === 'no') return 'no';
+  if(s.sent) return 'sent';
+  return 'staged';
+}
+const LABEL = {staged: 'Staged', sent: 'Sent, waiting', yes: 'Library said yes', no: 'Library said no', applied: 'Application in'};
+
+function stats(){
+  const c = {staged: 0, sent: 0, yes: 0, no: 0, applied: 0};
+  Q.items.forEach(it => c[state(it)]++);
+  const ms = new Date(Q.deadline) - new Date();
+  const left = ms <= 0 ? 'Closed' : (ms > 36e5 * 48 ? Math.floor(ms / 864e5) + ' days' : Math.floor(ms / 36e5) + ' h ' + Math.floor(ms % 36e5 / 6e4) + ' min');
+  const sentAll = Q.items.filter(it => st(it.id).sent).length, applied = c.applied;
+  $('stats').innerHTML =
+    `<div class="stat deadline"><b>${left}</b><span>to the deadline</span></div>` +
+    `<div class="stat"><b>${sentAll} / ${Q.items.length}</b><span>emails sent</span></div>` +
+    `<div class="stat"><b>${Q.items.filter(it => st(it.id).reply === 'yes').length}</b><span>said yes</span></div>` +
+    `<div class="stat"><b>${Q.items.filter(it => st(it.id).reply === 'no').length}</b><span>said no</span></div>` +
+    `<div class="stat"><b>${applied} / ${Q.items.length}</b><span>applications in</span></div>`;
+  const f = [['all', 'All ' + Q.items.length], ['staged', 'Staged ' + c.staged], ['sent', 'Waiting ' + c.sent], ['yes', 'Yes ' + c.yes], ['no', 'No ' + c.no], ['applied', 'Applied ' + c.applied]];
+  $('filters').innerHTML = f.map(([k, t]) => `<button data-filter="${k}" class="${filter === k ? 'on' : ''}">${t}</button>`).join('');
+}
+
+function card(it, i){
+  const s = st(it.id), stt = state(it), subject = val(it, 'subject'), body = val(it, 'body'), to = val(it, 'to');
+  const mailto = 'mailto:' + encodeURIComponent(to) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+  const gmail = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(to) + '&su=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+  const when = s.sent ? new Date(s.sent).toLocaleString([], {weekday: 'short', hour: 'numeric', minute: '2-digit'}) : '';
+  return `<div class="item ${s.open ? 'open' : ''}" data-id="${it.id}">
+    <div class="head" data-act="toggle">
+      <span class="n">${i + 1}</span>
+      <span class="t">${esc(it.town)} <small>${esc(it.library)} · ${esc(it.council)}</small></span>
+      ${it.needs_letter ? '<span class="pill letter">letter required</span>' : ''}
+      <span class="pill">ask $${it.ask}</span>
+      <span class="pill ${stt}">${LABEL[stt]}${stt === 'sent' && when ? ' · ' + esc(when) : ''}</span>
+    </div>
+    <div class="body">
+      <label>To</label>
+      <div class="row"><input type="text" data-field="to" value="${esc(to)}" style="flex:1 1 260px"><button data-act="copy" data-what="to">Copy address</button></div>
+      <label>Subject</label>
+      <div class="row"><input type="text" data-field="subject" value="${esc(subject)}" style="flex:1 1 260px"><button data-act="copy" data-what="subject">Copy subject</button></div>
+      <label>Email</label>
+      <textarea data-field="body">${esc(body)}</textarea>
+      <div class="row">
+        <button data-act="copy" data-what="body">Copy email</button>
+        <a class="btn" href="${esc(mailto)}" data-act="opened">Open in my mail program</a>
+        <a class="btn" href="${esc(gmail)}" target="_blank" rel="noopener" data-act="opened">Open in Gmail</a>
+        <button data-act="reset">Undo my edits</button>
+      </div>
+      <label>Track</label>
+      <div class="row">
+        <button data-act="sent" class="${s.sent ? 'on' : ''}">${s.sent ? 'Sent ✓' : 'Mark as sent'}</button>
+        <button data-act="reply" data-v="yes" class="${s.reply === 'yes' ? 'on' : ''}">Library said yes</button>
+        <button data-act="reply" data-v="no" class="bad ${s.reply === 'no' ? 'on' : ''}">Library said no</button>
+        <button data-act="applied" class="warn ${s.applied ? 'on' : ''}">${s.applied ? 'Application in ✓' : 'Mark application submitted'}</button>
+      </div>
+      <label>My notes</label>
+      <input type="text" data-field="mynote" value="${esc(s.mynote || '')}" placeholder="Who replied, what they said, what to do next">
+      <label>For the application</label>
+      <ul class="notes">${(it.notes || []).map(n => `<li>${esc(n).replace(/\*\*(.+?)\*\*/g, '<b style="color:var(--text)">$1</b>')}</li>`).join('')}</ul>
+      <div class="row meta">${it.profile ? `<a href="${esc(it.profile)}" target="_blank" rel="noopener">Council profile and priorities</a>` : ''} ${it.library_web ? ` · <a href="${esc(it.library_web)}" target="_blank" rel="noopener">Library website</a>` : ''}</div>
+    </div>
+  </div>`;
+}
+
+function render(){
+  $('campaign').textContent = Q.campaign;
+  $('sender').textContent = 'Send from ' + Q.sender + '. Deadline ' + new Date(Q.deadline).toLocaleString([], {weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit'}) + '.';
+  $('applyLink').href = Q.apply_url; $('attach').textContent = Q.attachment;
+  stats();
+  $('list').innerHTML = Q.items.map((it, i) => (filter === 'all' || state(it) === filter) ? card(it, i) : '').join('') || '<p>Nothing in this view.</p>';
+}
+
+$('list').addEventListener('click', e => {
+  const t = e.target.closest('[data-act]'); if(!t) return;
+  const el = t.closest('.item'), it = Q.items.find(x => x.id === el.dataset.id), s = st(it.id), act = t.dataset.act;
+  if(act === 'toggle'){ s.open = !s.open; save(); el.classList.toggle('open'); return; }
+  if(act === 'copy'){ navigator.clipboard.writeText(val(it, t.dataset.what)).then(() => toast('Copied'), () => toast('Copy did not work: select and copy by hand')); return; }
+  if(act === 'opened'){ return; }
+  if(act === 'sent'){ s.sent = s.sent ? null : new Date().toISOString(); }
+  if(act === 'reply'){ s.reply = s.reply === t.dataset.v ? null : t.dataset.v; if(s.reply && !s.sent) s.sent = new Date().toISOString(); }
+  if(act === 'applied'){ s.applied = s.applied ? null : new Date().toISOString(); }
+  if(act === 'reset'){ delete s.to; delete s.subject; delete s.body; toast('Back to the original'); }
+  s.open = true; save(); render();
+});
+$('list').addEventListener('input', e => {
+  const f = e.target.dataset.field; if(!f) return;
+  const it = Q.items.find(x => x.id === e.target.closest('.item').dataset.id);
+  st(it.id)[f] = e.target.value; save();
+});
+$('list').addEventListener('change', e => { if(e.target.dataset.field) render(); });
+$('filters').addEventListener('click', e => { const b = e.target.closest('[data-filter]'); if(b){ filter = b.dataset.filter; render(); } });
+
+$('unlockBtn').addEventListener('click', () => unlock($('pass').value));
+$('pass').addEventListener('keydown', e => { if(e.key === 'Enter') unlock($('pass').value); });
+$('lockBtn').addEventListener('click', () => { try { sessionStorage.removeItem(KEY + '-p'); } catch(e){} Q = null; $('deck').classList.add('hide'); $('lock').classList.remove('hide'); $('lockErr').textContent = ''; });
+$('exportBtn').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({saved: new Date().toISOString(), tracking: S}, null, 1)], {type: 'application/json'}));
+  a.download = 'launch-deck-tracking-' + new Date().toISOString().slice(0, 10) + '.json'; a.click(); URL.revokeObjectURL(a.href);
+});
+$('importBtn').addEventListener('click', () => $('importFile').click());
+$('importFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; if(!f) return;
+  try { const d = JSON.parse(await f.text()); if(!d.tracking) throw 0; S = d.tracking; save(); render(); toast('Backup restored'); }
+  catch(err){ toast('That file is not a launch deck backup'); }
+  e.target.value = '';
+});
+$('summaryBtn').addEventListener('click', () => {
+  const lines = Q.items.map((it, i) => `${i + 1}. ${it.town} (${it.library}): ${LABEL[state(it)]}${st(it.id).mynote ? ' — ' + st(it.id).mynote : ''}`);
+  navigator.clipboard.writeText(Q.campaign + '\n' + lines.join('\n')).then(() => toast('Summary copied'), () => toast('Copy did not work'));
+});
+setInterval(() => { if(Q) stats(); }, 60000);
+try { const p = sessionStorage.getItem(KEY + '-p'); if(p) unlock(p, true); } catch(e){}
+</script>
+</body>
+</html>

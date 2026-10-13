@@ -37,6 +37,7 @@
   .pill.sent{color:#06120d;background:var(--accent-2);border-color:transparent} .pill.yes{color:#06120d;background:var(--accent);border-color:transparent}
   .pill.no{color:#06120d;background:var(--bad);border-color:transparent} .pill.applied{color:#06120d;background:var(--warm);border-color:transparent}
   .pill.letter{color:var(--warm);border-color:var(--warm)}
+  .pill.started{color:var(--warm);border-color:var(--warm)} .pill.submitted{color:#06120d;background:var(--warm);border-color:transparent}
   .body{display:none;padding:4px 14px 16px;border-top:1px solid var(--border)} .item.open .body{display:block}
   .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
   label{font-size:.74rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;display:block;margin:12px 0 4px}
@@ -84,6 +85,20 @@
       <div class="row"><input type="text" readonly value="python send_queue.py --send" style="flex:1 1 300px"><span class="meta">asks you to type SEND, then your mailbox password</span></div>
       <p>When it finishes, press <b>Load the sender's record</b> and choose <code>launch-deck-tracking.json</code> from that folder: every email it sent is marked as sent here. Text you edited on this page is not used by the bulk sender; it sends the queue as built.</p>
     </details>
+    <details class="item" style="padding:12px 14px">
+      <summary style="cursor:pointer;font-weight:700">Filling the applications: autofill</summary>
+      <p>The grants system is another website, so this page cannot type into it. This button can: drag it to your bookmarks bar once (press Ctrl+Shift+B if the bar is hidden).</p>
+      <p><a class="btn primary" id="fillMark" href="#" title="Drag me to the bookmarks bar">Fill LCC application</a></p>
+      <p>Then, for each council:</p>
+      <ol class="notes" style="list-style:decimal">
+        <li>In the grants system, start the application for that council and get to the page with the questions. Copy that page's address and paste it into "My application link" for that town here, so one click brings you back.</li>
+        <li>Here, open the town, open "Application answers" and press <b>Copy all answers for autofill</b>.</li>
+        <li>Go back to the application tab and click <b>Fill LCC application</b> in your bookmarks bar. Allow it to read the clipboard if the browser asks. Every field it fills gets a green outline, and it lists any it could not find.</li>
+        <li>Check every field, enter the budget lines by hand (they sit behind a button), attach the PDF if needed, and press Submit yourself. Nothing is submitted for you.</li>
+        <li>Back here, press "Mark application submitted".</li>
+      </ol>
+      <p class="meta">The filler matches each answer to its question by the question's wording. It was written from the state's sample application, not tested on the live form, which is behind your sign-in: look over the first one carefully.</p>
+    </details>
     <div class="filters" id="filters"></div>
     <div id="list"></div>
     <div class="foot">Attach <b id="attach"></b> to every email. <a href="../">Back to the site</a></div>
@@ -127,34 +142,39 @@ function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){
 const st = id => (S[id] = S[id] || {});
 const val = (it, f) => (st(it.id)[f] !== undefined ? st(it.id)[f] : it[f]);
 
+function app(it){ const s = st(it.id); return s.applied ? 'submitted' : (s.appStarted ? 'started' : 'none'); }
+const APP = {none: 'Application not started', started: 'Application started', submitted: 'Application in'};
 function state(it){
   const s = st(it.id);
-  if(s.applied) return 'applied';
   if(s.reply === 'yes') return 'yes';
   if(s.reply === 'no') return 'no';
   if(s.sent) return 'sent';
   return 'staged';
 }
-const LABEL = {staged: 'Staged', sent: 'Sent, waiting', yes: 'Library said yes', no: 'Library said no', applied: 'Application in'};
+const LABEL = {staged: 'Staged', sent: 'Sent, waiting', yes: 'Library said yes', no: 'Library said no'};
+const show = it => filter === 'all' || state(it) === filter || (filter === 'toapply' && app(it) !== 'submitted') || (filter === 'applied' && app(it) === 'submitted');
 
 function stats(){
-  const c = {staged: 0, sent: 0, yes: 0, no: 0, applied: 0};
+  const c = {staged: 0, sent: 0, yes: 0, no: 0};
   Q.items.forEach(it => c[state(it)]++);
+  const started = Q.items.filter(it => app(it) === 'started').length;
   const ms = new Date(Q.deadline) - new Date();
   const left = ms <= 0 ? 'Closed' : (ms > 36e5 * 48 ? Math.floor(ms / 864e5) + ' days' : Math.floor(ms / 36e5) + ' h ' + Math.floor(ms % 36e5 / 6e4) + ' min');
-  const sentAll = Q.items.filter(it => st(it.id).sent).length, applied = c.applied;
+  const sentAll = Q.items.filter(it => st(it.id).sent).length, applied = Q.items.filter(it => app(it) === 'submitted').length;
   $('stats').innerHTML =
     `<div class="stat deadline"><b>${left}</b><span>to the deadline</span></div>` +
     `<div class="stat"><b>${sentAll} / ${Q.items.length}</b><span>emails sent</span></div>` +
     `<div class="stat"><b>${Q.items.filter(it => st(it.id).reply === 'yes').length}</b><span>said yes</span></div>` +
     `<div class="stat"><b>${Q.items.filter(it => st(it.id).reply === 'no').length}</b><span>said no</span></div>` +
+    `<div class="stat"><b>${started}</b><span>applications started</span></div>` +
     `<div class="stat"><b>${applied} / ${Q.items.length}</b><span>applications in</span></div>`;
-  const f = [['all', 'All ' + Q.items.length], ['staged', 'Staged ' + c.staged], ['sent', 'Waiting ' + c.sent], ['yes', 'Yes ' + c.yes], ['no', 'No ' + c.no], ['applied', 'Applied ' + c.applied]];
+  const f = [['all', 'All ' + Q.items.length], ['staged', 'Staged ' + c.staged], ['sent', 'Waiting ' + c.sent], ['yes', 'Yes ' + c.yes], ['no', 'No ' + c.no], ['toapply', 'Still to apply ' + (Q.items.length - applied)], ['applied', 'Applied ' + applied]];
   $('filters').innerHTML = f.map(([k, t]) => `<button data-filter="${k}" class="${filter === k ? 'on' : ''}">${t}</button>`).join('');
 }
 
 function card(it, i){
-  const s = st(it.id), stt = state(it), subject = val(it, 'subject'), body = val(it, 'body'), to = val(it, 'to');
+  const s = st(it.id), stt = state(it), ap = app(it), subject = val(it, 'subject'), body = val(it, 'body'), to = val(it, 'to');
+  const link = /^https:\/\//.test(s.applink || '') ? s.applink : '';
   const mailto = 'mailto:' + encodeURIComponent(to) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
   const gmail = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(to) + '&su=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
   const when = s.sent ? new Date(s.sent).toLocaleString([], {weekday: 'short', hour: 'numeric', minute: '2-digit'}) : '';
@@ -165,6 +185,7 @@ function card(it, i){
       ${it.needs_letter ? '<span class="pill letter">letter required</span>' : ''}
       <span class="pill">ask $${it.ask}</span>
       <span class="pill ${stt}">${LABEL[stt]}${stt === 'sent' && when ? ' · ' + esc(when) : ''}</span>
+      <span class="pill ${ap}">${APP[ap]}</span>
     </div>
     <div class="body">
       <label>To</label>
@@ -179,19 +200,27 @@ function card(it, i){
         <a class="btn" href="${esc(gmail)}" target="_blank" rel="noopener" data-act="opened">Open in Gmail</a>
         <button data-act="reset">Undo my edits</button>
       </div>
-      <label>Track</label>
+      <label>Track the email</label>
       <div class="row">
         <button data-act="sent" class="${s.sent ? 'on' : ''}">${s.sent ? 'Sent ✓' : 'Mark as sent'}</button>
         <button data-act="reply" data-v="yes" class="${s.reply === 'yes' ? 'on' : ''}">Library said yes</button>
         <button data-act="reply" data-v="no" class="bad ${s.reply === 'no' ? 'on' : ''}">Library said no</button>
-        <button data-act="applied" class="warn ${s.applied ? 'on' : ''}">${s.applied ? 'Application in ✓' : 'Mark application submitted'}</button>
       </div>
+      <label>Track the application</label>
+      <div class="row">
+        <button data-act="appstarted" class="warn ${s.appStarted ? 'on' : ''}">${s.appStarted ? 'Started ✓' : 'Mark application started'}</button>
+        <button data-act="applied" class="warn ${s.applied ? 'on' : ''}">${s.applied ? 'Submitted ✓ ' + esc(new Date(s.applied).toLocaleString([], {weekday: 'short', hour: 'numeric', minute: '2-digit'})) : 'Mark application submitted'}</button>
+        ${link ? `<a class="btn primary" href="${esc(link)}" target="_blank" rel="noopener" data-act="opened">Open my application</a>` : `<a class="btn" href="${esc(Q.apply_url)}" target="_blank" rel="noopener" data-act="opened">Open the grants system</a>`}
+      </div>
+      <label>My application link</label>
+      <input type="text" data-field="applink" value="${esc(s.applink || '')}" placeholder="Paste the address of this council's application page from the grants system">
       <label>My notes</label>
       <input type="text" data-field="mynote" value="${esc(s.mynote || '')}" placeholder="Who replied, what they said, what to do next">
       <label>For the application</label>
       <ul class="notes">${(it.notes || []).map(n => `<li>${esc(n).replace(/\*\*(.+?)\*\*/g, '<b style="color:var(--text)">$1</b>')}</li>`).join('')}</ul>
       ${(it.application || []).length ? `<details style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">Application answers, in the order the form asks (${it.application.length})</summary>
-        <p class="meta">Paste each into the grants system. Every answer fits its character limit. Where the library has replied, change "confirmation requested" to "confirmed" before you paste.</p>
+        <p class="meta">Every answer fits its character limit. Where the library has replied, change "confirmation requested" to "confirmed" in the grants system after filling.</p>
+        <div class="row"><button class="primary" data-act="copyfill">Copy all answers for autofill</button>${link ? `<a class="btn" href="${esc(link)}" target="_blank" rel="noopener" data-act="opened">Open my application</a>` : ''}</div>
         ${it.application.map((x, k) => `<label>${esc(x.q)}${x.limit ? ` <span style="text-transform:none;letter-spacing:0">(${x.a.length} of ${x.limit} characters)</span>` : ''}</label>
         <div class="row" style="align-items:flex-start"><textarea readonly style="min-height:${x.a.length > 160 ? 110 : 44}px;flex:1 1 300px">${esc(x.a)}</textarea><button data-act="copyapp" data-k="${k}">Copy</button></div>`).join('')}
       </details>` : ''}
@@ -205,7 +234,7 @@ function render(){
   $('sender').textContent = 'Send from ' + Q.sender + '. Deadline ' + new Date(Q.deadline).toLocaleString([], {weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit'}) + '.';
   $('applyLink').href = Q.apply_url; $('attach').textContent = Q.attachment;
   stats();
-  $('list').innerHTML = Q.items.map((it, i) => (filter === 'all' || state(it) === filter) ? card(it, i) : '').join('') || '<p>Nothing in this view.</p>';
+  $('list').innerHTML = Q.items.map((it, i) => show(it) ? card(it, i) : '').join('') || '<p>Nothing in this view.</p>';
 }
 
 $('list').addEventListener('click', e => {
@@ -214,10 +243,17 @@ $('list').addEventListener('click', e => {
   if(act === 'toggle'){ s.open = !s.open; save(); el.classList.toggle('open'); return; }
   if(act === 'copy'){ navigator.clipboard.writeText(val(it, t.dataset.what)).then(() => toast('Copied'), () => toast('Copy did not work: select and copy by hand')); return; }
   if(act === 'opened'){ return; }
+  if(act === 'copyfill'){
+    const answers = it.application.filter(x => !/^(Project Budget|Additional Material)/.test(x.q)).map(x => ({q: x.q, a: x.a}));
+    navigator.clipboard.writeText(JSON.stringify({lccfill: 1, town: it.town, council: it.council, answers})).then(() => toast('Answers copied: now click Fill LCC application on the form'), () => toast('Copy did not work in this browser'));
+    if(!s.appStarted){ s.appStarted = new Date().toISOString(); save(); }
+    return;
+  }
   if(act === 'copyapp'){ navigator.clipboard.writeText(it.application[+t.dataset.k].a).then(() => toast('Copied'), () => toast('Copy did not work: select and copy by hand')); return; }
   if(act === 'sent'){ s.sent = s.sent ? null : new Date().toISOString(); }
   if(act === 'reply'){ s.reply = s.reply === t.dataset.v ? null : t.dataset.v; if(s.reply && !s.sent) s.sent = new Date().toISOString(); }
-  if(act === 'applied'){ s.applied = s.applied ? null : new Date().toISOString(); }
+  if(act === 'applied'){ s.applied = s.applied ? null : new Date().toISOString(); if(s.applied) s.appStarted = s.appStarted || s.applied; }
+  if(act === 'appstarted'){ s.appStarted = s.appStarted ? null : new Date().toISOString(); }
   if(act === 'reset'){ delete s.to; delete s.subject; delete s.body; toast('Back to the original'); }
   s.open = true; save(); render();
 });
@@ -250,6 +286,52 @@ $('summaryBtn').addEventListener('click', () => {
   const lines = Q.items.map((it, i) => `${i + 1}. ${it.town} (${it.library}): ${LABEL[state(it)]}${st(it.id).mynote ? ' — ' + st(it.id).mynote : ''}`);
   navigator.clipboard.writeText(Q.campaign + '\n' + lines.join('\n')).then(() => toast('Summary copied'), () => toast('Copy did not work'));
 });
+function LCCFILL(){
+  (async function(){
+    var t = '';
+    try { t = await navigator.clipboard.readText(); } catch(e){}
+    if(!t || t.indexOf('"lccfill"') < 0) t = prompt('Paste the answers copied from the launch deck (Copy all answers for autofill):') || '';
+    var d; try { d = JSON.parse(t); } catch(e){ alert('Those are not the answers from the launch deck. Press "Copy all answers for autofill" there first.'); return; }
+    if(!d || !d.answers){ alert('Those are not the answers from the launch deck.'); return; }
+    var norm = function(s){ return String(s).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); };
+    var docs = [document];
+    Array.prototype.forEach.call(document.querySelectorAll('iframe'), function(f){ try { if(f.contentDocument) docs.push(f.contentDocument); } catch(e){} });
+    var FIELD = 'textarea, select, input:not([type=hidden]):not([type=button]):not([type=submit]):not([type=checkbox]):not([type=radio]):not([type=file])';
+    var used = [], done = 0, miss = [];
+    d.answers.forEach(function(x){
+      var key = norm(x.q).slice(0, 30), field = null;
+      docs.some(function(doc){
+        var w = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT), n, labels = [];
+        while((n = w.nextNode())){ var tx = norm(n.nodeValue); if(tx.length >= 8 && (tx.indexOf(key) === 0 || key.indexOf(tx) === 0 && tx.length > key.length * 0.7)) labels.push(n.parentElement); }
+        return labels.some(function(lab){
+          var f = null;
+          var forId = lab.getAttribute && lab.getAttribute('for'); if(forId) f = doc.getElementById(forId);
+          var a = lab;
+          for(var i = 0; !f && a && i < 7; i++, a = a.parentElement){
+            var c = a.querySelectorAll ? a.querySelectorAll(FIELD) : [];
+            for(var j = 0; j < c.length; j++){ if((lab.compareDocumentPosition(c[j]) & Node.DOCUMENT_POSITION_FOLLOWING) && used.indexOf(c[j]) < 0 && c[j].offsetParent !== null && !c[j].disabled && !c[j].readOnly){ f = c[j]; break; } }
+          }
+          if(f && used.indexOf(f) < 0){ field = f; return true; }
+          return false;
+        });
+      });
+      if(!field){ miss.push(x.q); return; }
+      if(field.tagName === 'SELECT'){
+        var want = norm(x.a), opt = Array.prototype.filter.call(field.options, function(o){ return norm(o.textContent) === want; })[0];
+        if(!opt){ miss.push(x.q + ' (choose "' + x.a + '")'); return; }
+        field.value = opt.value;
+      } else {
+        var proto = field.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+        Object.getOwnPropertyDescriptor(proto, 'value').set.call(field, x.a);
+      }
+      ['input', 'change', 'keyup', 'blur'].forEach(function(ev){ field.dispatchEvent(new Event(ev, {bubbles: true})); });
+      field.style.outline = '3px solid #2bd4a0'; used.push(field); done++;
+    });
+    alert('Filled ' + done + ' of ' + d.answers.length + ' answers for ' + (d.town || 'this council') + '.' + (miss.length ? '\n\nFill these by hand:\n- ' + miss.join('\n- ') : '') + '\n\nCheck every field. The budget lines and the PDF are yours to add. Nothing has been submitted.');
+  })();
+}
+$('fillMark').href = 'javascript:' + encodeURIComponent('(' + LCCFILL.toString() + ')()');
+$('fillMark').addEventListener('click', e => { e.preventDefault(); toast('Drag this button to your bookmarks bar'); });
 setInterval(() => { if(Q) stats(); }, 60000);
 try { const p = sessionStorage.getItem(KEY + '-p'); if(p) unlock(p, true); } catch(e){}
 </script>

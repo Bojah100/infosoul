@@ -190,6 +190,11 @@ function card(it, i){
       <input type="text" data-field="mynote" value="${esc(s.mynote || '')}" placeholder="Who replied, what they said, what to do next">
       <label>For the application</label>
       <ul class="notes">${(it.notes || []).map(n => `<li>${esc(n).replace(/\*\*(.+?)\*\*/g, '<b style="color:var(--text)">$1</b>')}</li>`).join('')}</ul>
+      ${(it.application || []).length ? `<details style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">Application answers, in the order the form asks (${it.application.length})</summary>
+        <p class="meta">Paste each into the grants system. Every answer fits its character limit. Where the library has replied, change "confirmation requested" to "confirmed" before you paste.</p>
+        ${it.application.map((x, k) => `<label>${esc(x.q)}${x.limit ? ` <span style="text-transform:none;letter-spacing:0">(${x.a.length} of ${x.limit} characters)</span>` : ''}</label>
+        <div class="row" style="align-items:flex-start"><textarea readonly style="min-height:${x.a.length > 160 ? 110 : 44}px;flex:1 1 300px">${esc(x.a)}</textarea><button data-act="copyapp" data-k="${k}">Copy</button></div>`).join('')}
+      </details>` : ''}
       <div class="row meta">${it.profile ? `<a href="${esc(it.profile)}" target="_blank" rel="noopener">Council profile and priorities</a>` : ''} ${it.library_web ? ` · <a href="${esc(it.library_web)}" target="_blank" rel="noopener">Library website</a>` : ''}</div>
     </div>
   </div>`;
@@ -209,6 +214,7 @@ $('list').addEventListener('click', e => {
   if(act === 'toggle'){ s.open = !s.open; save(); el.classList.toggle('open'); return; }
   if(act === 'copy'){ navigator.clipboard.writeText(val(it, t.dataset.what)).then(() => toast('Copied'), () => toast('Copy did not work: select and copy by hand')); return; }
   if(act === 'opened'){ return; }
+  if(act === 'copyapp'){ navigator.clipboard.writeText(it.application[+t.dataset.k].a).then(() => toast('Copied'), () => toast('Copy did not work: select and copy by hand')); return; }
   if(act === 'sent'){ s.sent = s.sent ? null : new Date().toISOString(); }
   if(act === 'reply'){ s.reply = s.reply === t.dataset.v ? null : t.dataset.v; if(s.reply && !s.sent) s.sent = new Date().toISOString(); }
   if(act === 'applied'){ s.applied = s.applied ? null : new Date().toISOString(); }

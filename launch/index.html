@@ -68,13 +68,22 @@
     <div class="bar" id="stats"></div>
     <div class="row">
       <a class="btn primary" id="applyLink" target="_blank" rel="noopener">Open the grants system</a>
+      <a class="btn" href="booking-sheet.pdf" download="The AI Age, For the Layman - booking sheet.pdf">Download the booking sheet</a>
       <button id="exportBtn">Back up my tracking</button>
-      <button id="importBtn">Restore a backup</button>
+      <button id="importBtn">Load the sender's record or a backup</button>
       <button id="summaryBtn">Copy a status summary</button>
       <button id="lockBtn">Lock</button>
       <input type="file" id="importFile" accept="application/json" class="hide">
     </div>
     <p class="meta">Your marks and edits are saved in this browser only. Back them up before changing computer or clearing the browser. Sending happens in your own mail program: nothing is sent from this page.</p>
+    <details class="item" style="padding:12px 14px">
+      <summary style="cursor:pointer;font-weight:700">Send them all at once, with the booking sheet attached</summary>
+      <p>A web page is not allowed to send mail or attach files, so bulk sending runs on your own computer, through your own mailbox. It attaches the booking sheet to every email, sends one every 45 seconds, never sends the same one twice, and copies each to your mailbox. Open a terminal in the launch-deck folder and run these in order:</p>
+      <div class="row"><input type="text" readonly value="python send_queue.py" style="flex:1 1 300px"><span class="meta">shows the plan; sends nothing</span></div>
+      <div class="row"><input type="text" readonly value="python send_queue.py --test" style="flex:1 1 300px"><span class="meta">sends the first one to you only</span></div>
+      <div class="row"><input type="text" readonly value="python send_queue.py --send" style="flex:1 1 300px"><span class="meta">asks you to type SEND, then your mailbox password</span></div>
+      <p>When it finishes, press <b>Load the sender's record</b> and choose <code>launch-deck-tracking.json</code> from that folder: every email it sent is marked as sent here. Text you edited on this page is not used by the bulk sender; it sends the queue as built.</p>
+    </details>
     <div class="filters" id="filters"></div>
     <div id="list"></div>
     <div class="foot">Attach <b id="attach"></b> to every email. <a href="../">Back to the site</a></div>
@@ -225,7 +234,9 @@ $('exportBtn').addEventListener('click', () => {
 $('importBtn').addEventListener('click', () => $('importFile').click());
 $('importFile').addEventListener('change', async e => {
   const f = e.target.files[0]; if(!f) return;
-  try { const d = JSON.parse(await f.text()); if(!d.tracking) throw 0; S = d.tracking; save(); render(); toast('Backup restored'); }
+  try { const d = JSON.parse(await f.text()); if(!d.tracking) throw 0;
+        for(const id in d.tracking){ const cur = st(id), inc = d.tracking[id]; for(const k in inc){ if(inc[k] !== null && inc[k] !== undefined && (cur[k] === undefined || cur[k] === null || k === 'sent')) cur[k] = inc[k]; } }
+        save(); render(); toast('Loaded'); }
   catch(err){ toast('That file is not a launch deck backup'); }
   e.target.value = '';
 });

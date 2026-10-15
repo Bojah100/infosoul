@@ -38,6 +38,10 @@
   .pill.no{color:#06120d;background:var(--bad);border-color:transparent} .pill.applied{color:#06120d;background:var(--warm);border-color:transparent}
   .pill.letter{color:var(--warm);border-color:var(--warm)}
   .pill.started{color:var(--warm);border-color:var(--warm)} .pill.submitted{color:#06120d;background:var(--warm);border-color:transparent}
+  .pill.maybe{color:var(--accent);border-color:var(--accent)} .pill.due{color:var(--accent-2);border-color:var(--accent-2)} .pill.overdue{color:#06120d;background:var(--warm);border-color:transparent}
+  input[type=date]{font:inherit;background:var(--alt);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color-scheme:dark}
+  .groups{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 4px} .groups button{border-radius:8px}
+  .next{font-size:.84rem;color:var(--text);padding:0 14px 10px 46px;margin-top:-6px}
   .body{display:none;padding:4px 14px 16px;border-top:1px solid var(--border)} .item.open .body{display:block}
   .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
   label{font-size:.74rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;display:block;margin:12px 0 4px}
@@ -99,6 +103,8 @@
       </ol>
       <p class="meta">The filler matches each answer to its question by the question's wording. It was written from the state's sample application, not tested on the live form, which is behind your sign-in: look over the first one carefully.</p>
     </details>
+    <div class="groups" id="groups"></div>
+    <div class="bar" id="stats2"></div>
     <div class="filters" id="filters"></div>
     <div id="list"></div>
     <div class="foot">Attach <b id="attach"></b> to every email. <a href="../">Back to the site</a></div>
@@ -132,7 +138,10 @@ async function unlock(passphrase, quiet){
     try { sessionStorage.setItem(KEY + '-p', passphrase.trim()); } catch(e){}
     try { S = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e){ S = {}; }
     // the record kept inside the encrypted queue (what was sent, started and submitted) fills whatever this browser has not marked
-    for(const id in (Q.record || {})){ const cur = st(id), inc = Q.record[id]; for(const k in inc){ if(cur[k] === undefined || cur[k] === null || cur[k] === '') cur[k] = inc[k]; } }
+    // a field this browser has not changed since the last record keeps following the record, so new follow-ups and replies show up
+    for(const id in (Q.record || {})){ const cur = st(id), inc = Q.record[id], last = cur._rec || {};
+      for(const k in inc){ if(cur[k] === undefined || cur[k] === null || cur[k] === '' || (k in last && cur[k] === last[k])) cur[k] = inc[k]; }
+      cur._rec = {...inc}; }
     save();
     $('lock').classList.add('hide'); $('deck').classList.remove('hide'); $('pass').value = '';
     render();
@@ -151,31 +160,102 @@ function state(it){
   const s = st(it.id);
   if(s.reply === 'yes') return 'yes';
   if(s.reply === 'no') return 'no';
+  if(s.reply === 'maybe') return 'maybe';
   if(s.sent) return 'sent';
   return 'staged';
 }
-const LABEL = {staged: 'Staged', sent: 'Sent, waiting', yes: 'Library said yes', no: 'Library said no'};
-const show = it => filter === 'all' || state(it) === filter || (filter === 'toapply' && app(it) !== 'submitted') || (filter === 'applied' && app(it) === 'submitted');
+const LABEL = {staged: 'Not sent yet', sent: 'Sent, waiting', maybe: 'Interested', yes: 'Said yes', no: 'Said no'};
+const FORMLABEL = {staged: 'Not submitted yet', sent: 'Submitted, waiting', maybe: 'Interested', yes: 'Said yes', no: 'Said no'};
+// groups: the Massachusetts grant libraries, the nine-region venue emails, the speaker proposal forms, and every follow-up across them
+const GROUPS = [['due', 'Follow-ups'], ['lcc', 'Grant applications (MA)'], ['region', 'Region emails'], ['form', 'Proposal forms']];
+let group = 'due';
+const today = () => new Date().toISOString().slice(0, 10);
+const grp = it => it.group || 'lcc';
+const inGroup = it => group === 'due' ? !!st(it.id).due : grp(it) === group;
+const dueKind = it => { const d = st(it.id).due; if(!d) return ''; return d <= today() ? 'overdue' : 'due'; };
+const fmtDay = d => new Date(d + 'T12:00:00').toLocaleDateString([], {weekday: 'short', day: 'numeric', month: 'short', year: d.slice(0, 4) === today().slice(0, 4) ? undefined : 'numeric'});
+const show = it => inGroup(it) && (filter === 'all' || state(it) === filter || (filter === 'toapply' && app(it) !== 'submitted') || (filter === 'applied' && app(it) === 'submitted') || (filter === 'overdue' && dueKind(it) === 'overdue'));
 
 function stats(){
-  const c = {staged: 0, sent: 0, yes: 0, no: 0};
-  Q.items.forEach(it => c[state(it)]++);
-  const started = Q.items.filter(it => app(it) === 'started').length;
-  const ms = new Date(Q.deadline) - new Date();
-  const left = ms <= 0 ? 'Closed' : (ms > 36e5 * 48 ? Math.floor(ms / 864e5) + ' days' : Math.floor(ms / 36e5) + ' h ' + Math.floor(ms % 36e5 / 6e4) + ' min');
-  const sentAll = Q.items.filter(it => st(it.id).sent).length, applied = Q.items.filter(it => app(it) === 'submitted').length;
+  const all = Q.items, mine = all.filter(inGroup);
+  const n = k => all.filter(it => st(it.id).reply === k).length;
+  const contacted = all.filter(it => st(it.id).sent).length, overdue = all.filter(it => dueKind(it) === 'overdue').length, due = all.filter(it => st(it.id).due).length;
   $('stats').innerHTML =
-    `<div class="stat deadline"><b>${left}</b><span>to the deadline</span></div>` +
-    `<div class="stat"><b>${sentAll} / ${Q.items.length}</b><span>emails sent</span></div>` +
-    `<div class="stat"><b>${Q.items.filter(it => st(it.id).reply === 'yes').length}</b><span>said yes</span></div>` +
-    `<div class="stat"><b>${Q.items.filter(it => st(it.id).reply === 'no').length}</b><span>said no</span></div>` +
-    `<div class="stat"><b>${started}</b><span>applications started</span></div>` +
-    `<div class="stat"><b>${applied} / ${Q.items.length}</b><span>applications in</span></div>`;
-  const f = [['all', 'All ' + Q.items.length], ['staged', 'Staged ' + c.staged], ['sent', 'Waiting ' + c.sent], ['yes', 'Yes ' + c.yes], ['no', 'No ' + c.no], ['toapply', 'Still to apply ' + (Q.items.length - applied)], ['applied', 'Applied ' + applied]];
+    `<div class="stat"><b>${contacted}</b><span>venues contacted</span></div>` +
+    `<div class="stat"><b>${n('maybe')}</b><span>interested</span></div>` +
+    `<div class="stat"><b>${n('yes')}</b><span>said yes</span></div>` +
+    `<div class="stat"><b>${n('no')}</b><span>said no</span></div>` +
+    `<div class="stat deadline"><b>${overdue} / ${due}</b><span>follow-ups due now</span></div>`;
+  $('groups').innerHTML = GROUPS.map(([k, t]) => `<button data-group="${k}" class="${group === k ? 'on' : ''}">${t} ${k === 'due' ? due : all.filter(it => grp(it) === k).length}</button>`).join('');
+  if(group === 'lcc'){
+    const ms = new Date(Q.deadline) - new Date();
+    const left = ms <= 0 ? 'Closed' : (ms > 36e5 * 48 ? Math.floor(ms / 864e5) + ' days' : Math.floor(ms / 36e5) + ' h ' + Math.floor(ms % 36e5 / 6e4) + ' min');
+    const applied = mine.filter(it => app(it) === 'submitted').length;
+    $('stats2').innerHTML = `<div class="stat deadline"><b>${left}</b><span>to the grant deadline</span></div><div class="stat"><b>${applied} / ${mine.length}</b><span>applications in</span></div>`;
+  } else $('stats2').innerHTML = '';
+  const c = {staged: 0, sent: 0, maybe: 0, yes: 0, no: 0};
+  mine.forEach(it => c[state(it)]++);
+  const L = group === 'form' ? FORMLABEL : LABEL;
+  const f = [['all', 'All ' + mine.length], ['staged', L.staged + ' ' + c.staged], ['sent', 'Waiting ' + c.sent], ['maybe', 'Interested ' + c.maybe], ['yes', 'Yes ' + c.yes], ['no', 'No ' + c.no]]
+    .concat(group === 'lcc' ? [['toapply', 'Still to apply ' + mine.filter(it => app(it) !== 'submitted').length], ['applied', 'Applied ' + mine.filter(it => app(it) === 'submitted').length]] : [])
+    .concat(group === 'due' ? [['overdue', 'Due now ' + mine.filter(it => dueKind(it) === 'overdue').length]] : [])
+    .filter(([k, t]) => k === 'all' || !/ 0$/.test(t));
   $('filters').innerHTML = f.map(([k, t]) => `<button data-filter="${k}" class="${filter === k ? 'on' : ''}">${t}</button>`).join('');
 }
 
+// the follow-up block every item gets: the next step and when to act on it
+function followup(s){
+  return `<label>Follow-up</label>
+      <div class="row"><input type="text" data-field="next" value="${esc(s.next || '')}" placeholder="The next step: who to write to, what to send" style="flex:1 1 320px">
+      <input type="date" data-field="due" value="${esc(s.due || '')}" title="When to act">
+      <button data-act="done">${s.due ? 'Done: clear it' : 'Clear'}</button></div>`;
+}
+function replyButtons(s, who){
+  return `<button data-act="reply" data-v="maybe" class="${s.reply === 'maybe' ? 'on' : ''}">Interested</button>
+        <button data-act="reply" data-v="yes" class="${s.reply === 'yes' ? 'on' : ''}">${who} said yes</button>
+        <button data-act="reply" data-v="no" class="bad ${s.reply === 'no' ? 'on' : ''}">${who} said no</button>`;
+}
+function headPills(it, s, stt, labels){
+  const when = s.sent ? new Date(s.sent).toLocaleDateString([], {day: 'numeric', month: 'short'}) : '';
+  const dk = dueKind(it);
+  return `<span class="pill ${stt}">${labels[stt]}${stt === 'sent' && when ? ' · ' + esc(when) : ''}</span>` + (dk ? `<span class="pill ${dk}">${dk === 'overdue' ? 'Follow up now' : 'Follow up ' + esc(fmtDay(s.due))}</span>` : '');
+}
+
+// a region venue or a proposal form
+function cardOther(it, i){
+  const s = st(it.id), stt = state(it), isForm = grp(it) === 'form';
+  const subject = val(it, 'subject'), body = val(it, 'body'), to = val(it, 'to');
+  const sub = isForm ? `${esc(it.town)}, ${esc(it.state)} · proposal form` : `${esc(it.town || '')}${it.state ? ', ' + esc(it.state) : ''} · ${esc(it.type || '')}`;
+  const mailto = to ? 'mailto:' + encodeURIComponent(to) + '?subject=' + encodeURIComponent(subject || '') + '&body=' + encodeURIComponent(body || '') : '';
+  return `<div class="item ${s.open ? 'open' : ''}" data-id="${it.id}">
+    <div class="head" data-act="toggle">
+      <span class="n">${i + 1}</span>
+      <span class="t">${esc(it.library)} <small>${sub}</small></span>
+      ${headPills(it, s, stt, isForm ? FORMLABEL : LABEL)}
+    </div>
+    ${s.next && !s.open ? `<div class="next">→ ${esc(s.next)}</div>` : ''}
+    <div class="body">
+      ${isForm ? `<p class="meta">Fee asked: ${esc(it.fee || '')}. ${esc(it.how || '')}</p>
+      <div class="row"><a class="btn primary" href="${esc(it.url)}" target="_blank" rel="noopener" data-act="opened">Open the form</a>
+        <button data-act="sent" class="warn ${s.sent ? 'on' : ''}">${s.sent ? 'Submitted ✓ ' + esc(new Date(s.sent).toLocaleDateString([], {day: 'numeric', month: 'short'})) : 'Mark form submitted'}</button></div>`
+      : `<label>To</label>
+      <div class="row"><input type="text" data-field="to" value="${esc(to)}" style="flex:1 1 260px"><button data-act="copy" data-what="to">Copy address</button></div>
+      <label>Subject</label>
+      <div class="row"><input type="text" data-field="subject" value="${esc(subject)}" style="flex:1 1 260px"><button data-act="copy" data-what="subject">Copy subject</button></div>
+      <details><summary style="cursor:pointer;font-weight:700;margin:8px 0">The email that was sent</summary><textarea data-field="body">${esc(body)}</textarea>
+      <div class="row"><button data-act="copy" data-what="body">Copy email</button>${mailto ? `<a class="btn" href="${esc(mailto)}" data-act="opened">Open in my mail program</a>` : ''}<button data-act="reset">Undo my edits</button></div></details>
+      <div class="row"><button data-act="sent" class="${s.sent ? 'on' : ''}">${s.sent ? 'Sent ✓' : 'Mark as sent'}</button></div>`}
+      <label>Their answer${s.replied ? ' · replied ' + esc(new Date(s.replied).toLocaleDateString([], {day: 'numeric', month: 'short'})) : ''}</label>
+      <div class="row">${replyButtons(s, isForm ? 'They' : 'Venue')}</div>
+      ${followup(s)}
+      <label>My notes</label>
+      <input type="text" data-field="mynote" value="${esc(s.mynote || '')}" placeholder="What happened so far">
+    </div>
+  </div>`;
+}
+
 function card(it, i){
+  if(grp(it) !== 'lcc') return cardOther(it, i);
   const s = st(it.id), stt = state(it), ap = app(it), subject = val(it, 'subject'), body = val(it, 'body'), to = val(it, 'to');
   const link = /^https:\/\//.test(s.applink || '') ? s.applink : '';
   const mailto = 'mailto:' + encodeURIComponent(to) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
@@ -187,9 +267,10 @@ function card(it, i){
       <span class="t">${esc(it.town)} <small>${esc(it.library)} · ${esc(it.council)}</small></span>
       ${it.needs_letter ? '<span class="pill letter">letter required</span>' : ''}
       <span class="pill">ask $${it.ask}</span>
-      <span class="pill ${stt}">${LABEL[stt]}${stt === 'sent' && when ? ' · ' + esc(when) : ''}</span>
+      ${headPills(it, s, stt, {...LABEL, maybe: 'Library interested', yes: 'Library said yes', no: 'Library said no'})}
       <span class="pill ${ap}">${APP[ap]}</span>
     </div>
+    ${s.next && !s.open ? `<div class="next">→ ${esc(s.next)}</div>` : ''}
     <div class="body">
       <label>To</label>
       <div class="row"><input type="text" data-field="to" value="${esc(to)}" style="flex:1 1 260px"><button data-act="copy" data-what="to">Copy address</button></div>
@@ -206,9 +287,9 @@ function card(it, i){
       <label>Track the email</label>
       <div class="row">
         <button data-act="sent" class="${s.sent ? 'on' : ''}">${s.sent ? 'Sent ✓' : 'Mark as sent'}</button>
-        <button data-act="reply" data-v="yes" class="${s.reply === 'yes' ? 'on' : ''}">Library said yes</button>
-        <button data-act="reply" data-v="no" class="bad ${s.reply === 'no' ? 'on' : ''}">Library said no</button>
+        ${replyButtons(s, 'Library')}
       </div>
+      ${followup(s)}
       <label>Track the application${s.appno ? ' · ' + esc(s.appno) : ''}</label>
       <div class="row">
         <button data-act="appstarted" class="warn ${s.appStarted ? 'on' : ''}">${s.appStarted ? 'Started ✓' : 'Mark application started'}</button>
@@ -237,7 +318,9 @@ function render(){
   $('sender').textContent = 'Send from ' + Q.sender + '. Deadline ' + new Date(Q.deadline).toLocaleString([], {weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit'}) + '.';
   $('applyLink').href = Q.apply_url; $('attach').textContent = Q.attachment;
   stats();
-  $('list').innerHTML = Q.items.map((it, i) => show(it) ? card(it, i) : '').join('') || '<p>Nothing in this view.</p>';
+  let list = Q.items.map((it, i) => [it, i]).filter(([it]) => show(it));
+  if(group === 'due') list.sort((a, b) => st(a[0].id).due.localeCompare(st(b[0].id).due));
+  $('list').innerHTML = list.map(([it, i], k) => card(it, group === 'lcc' ? i : k)).join('') || '<p>Nothing in this view.</p>';
 }
 
 $('list').addEventListener('click', e => {
@@ -258,6 +341,7 @@ $('list').addEventListener('click', e => {
   if(act === 'applied'){ s.applied = s.applied ? null : new Date().toISOString(); if(s.applied) s.appStarted = s.appStarted || s.applied; }
   if(act === 'appstarted'){ s.appStarted = s.appStarted ? null : new Date().toISOString(); }
   if(act === 'reset'){ delete s.to; delete s.subject; delete s.body; toast('Back to the original'); }
+  if(act === 'done'){ s.due = ''; s.next = ''; toast('Follow-up cleared'); }
   s.open = true; save(); render();
 });
 $('list').addEventListener('input', e => {
@@ -267,6 +351,7 @@ $('list').addEventListener('input', e => {
 });
 $('list').addEventListener('change', e => { if(e.target.dataset.field) render(); });
 $('filters').addEventListener('click', e => { const b = e.target.closest('[data-filter]'); if(b){ filter = b.dataset.filter; render(); } });
+$('groups').addEventListener('click', e => { const b = e.target.closest('[data-group]'); if(b){ group = b.dataset.group; filter = 'all'; render(); } });
 
 $('unlockBtn').addEventListener('click', () => unlock($('pass').value));
 $('pass').addEventListener('keydown', e => { if(e.key === 'Enter') unlock($('pass').value); });
@@ -286,7 +371,7 @@ $('importFile').addEventListener('change', async e => {
   e.target.value = '';
 });
 $('summaryBtn').addEventListener('click', () => {
-  const lines = Q.items.map((it, i) => `${i + 1}. ${it.town} (${it.library}): ${LABEL[state(it)]}${st(it.id).mynote ? ' — ' + st(it.id).mynote : ''}`);
+  const lines = Q.items.filter(show).map((it, i) => `${i + 1}. ${it.town || ''} (${it.library}): ${LABEL[state(it)]}${st(it.id).due ? ' · follow up ' + st(it.id).due + ': ' + (st(it.id).next || '') : ''}${st(it.id).mynote ? ' — ' + st(it.id).mynote : ''}`);
   navigator.clipboard.writeText(Q.campaign + '\n' + lines.join('\n')).then(() => toast('Summary copied'), () => toast('Copy did not work'));
 });
 function LCCFILL(){

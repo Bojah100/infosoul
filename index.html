@@ -1784,6 +1784,15 @@
   // on a confirmation email FormSubmit sends to that inbox before delivery starts.
   const CONTACT_ENDPOINT = 'https://formsubmit.co/ajax/booking@infosoullaboratories.com';
 
+  // FormSubmit answers 200 even when it did not deliver (for example before the address is activated),
+  // so only its own success flag counts as sent.
+  async function delivered(res){
+    if(!res.ok) throw new Error('Request failed: ' + res.status);
+    let j = {};
+    try { j = await res.json(); } catch(e) {}
+    if(!(j.success === true || j.success === 'true')) throw new Error(j.message || 'not delivered');
+  }
+
   async function handleSubmit(e){
     e.preventDefault();
     const form = e.target;
@@ -1795,6 +1804,7 @@
       name: form.name.value,
       email: form.email.value,
       organization_type: form.organization_type.value,
+      enquiry: form.enquiry ? form.enquiry.value : '',
       message: form.message.value,
       _subject: 'New Infosoul Laboratories consultation request'
     };
@@ -1809,7 +1819,7 @@
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify(payload)
       });
-      if(!res.ok) throw new Error('Request failed: ' + res.status);
+      await delivered(res);
 
       box.innerHTML = '<h2>Thank you.</h2><p>We received your message and will reply within one business day.</p>';
     } catch(err){
@@ -1840,7 +1850,7 @@
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify(payload)
       });
-      if(!res.ok) throw new Error('Request failed: ' + res.status);
+      await delivered(res);
       form.parentElement.innerHTML = '<h3>Thank you.</h3><p>We have the request and will reply within one business day with a confirmation and the invoice.</p>';
     } catch(err){
       btn.disabled = false; btn.textContent = 'Send the booking request';
@@ -1870,7 +1880,7 @@
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ email: form.email.value, list: 'The AI Age, For the Layman (book)', _subject: 'Book list: ' + form.email.value })
       });
-      if(!res.ok) throw new Error('Request failed: ' + res.status);
+      await delivered(res);
       form.innerHTML = '<span style="color:var(--accent);font-weight:700">Thank you. You will hear once, when it is out.</span>';
       note.style.display = 'none';
     } catch(err){

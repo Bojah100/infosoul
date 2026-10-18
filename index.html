@@ -4,6 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Infosoul Laboratories — AI Appliances for Mission-Driven Organizations</title>
+<meta name="description" content="Infosoul Laboratories builds AI systems for libraries, nonprofits, schools, unions and congregations, on their own computers and under their control. Salem, Massachusetts; working nationwide.">
+<link rel="canonical" href="https://infosoullaboratories.com/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Infosoul Laboratories">
+<meta property="og:title" content="Infosoul Laboratories: you don't need to become an AI expert">
+<meta property="og:description" content="AI systems for mission-driven organisations, on their own computers and under their control.">
+<meta property="og:url" content="https://infosoullaboratories.com/">
+<meta property="og:image" content="https://infosoullaboratories.com/media/og-home.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <style>
   :root{
     --bg: #0b0d12;
@@ -514,9 +528,15 @@
     @media (max-width:720px){ #talk .bookad .inside-grid{grid-template-columns:repeat(2,minmax(0,1fr))} #talk .bookad .inside img{height:130px} }
     @media (max-width:720px){ .badge-fit{white-space:normal;max-width:100%;box-sizing:border-box} }
     @media (max-width:560px){#talk .bookad{grid-template-columns:1fr}#talk .bookad .cover{width:120px}}
+  /* keyboard focus, skip link, reduced motion */
+  :focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:4px;}
+  .skip{position:absolute; left:-9999px; top:8px; z-index:1000; background:var(--accent); color:#0b0d12; padding:.6rem 1rem; border-radius:8px; font-weight:700;}
+  .skip:focus{left:12px;}
+  @media (prefers-reduced-motion: reduce){ *,*::before,*::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important;} }
   </style>
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <header class="nav">
   <div class="nav-inner">
@@ -544,6 +564,7 @@
   </div>
 </header>
 
+<main id="main">
 <section class="hero">
   <div class="wrap">
     <span class="eyebrow">AI IT — Managed AI Services for Mission-Driven Organizations</span>
@@ -880,7 +901,7 @@
     </div>
 
     <div class="studio-hero">
-      <video autoplay muted loop playsinline preload="metadata" poster="media/overground-poster.jpg"
+      <video class="studio-loop" muted loop playsinline preload="none" poster="media/overground-poster.jpg"
              aria-label="Animated flight through a model of the solar system: the sun, the planets and their orbits, drawn in clay">
         <source src="media/overground-loop.webm" type="video/webm">
         <source src="media/overground-loop.mp4" type="video/mp4">
@@ -1381,7 +1402,7 @@
       ignore it.</span></p>
 
     <div class="bookad" id="book">
-      <img class="cover" src="media/cover-ai-age-300.png" srcset="media/cover-ai-age-300.png 1x, media/cover-ai-age.png 2x" width="150" height="240"
+      <img class="cover" src="media/cover-ai-age-300.webp" srcset="media/cover-ai-age-300.webp 1x, media/cover-ai-age.webp 2x" width="150" height="240"
         alt="Front cover of The AI Age, For the Layman, by Brock Satter"
         onerror="this.outerHTML='<div class=&quot;cover&quot; aria-hidden=&quot;true&quot;><div class=&quot;s&quot;>For the Layman &middot; 1</div><div class=&quot;t&quot;>The AI Age,<span>For the Layman.</span></div><div class=&quot;a&quot;>Brock Satter</div></div>'">
       <div>
@@ -1467,7 +1488,7 @@
         </div>
         <button type="submit" class="btn btn-primary" id="bookingSubmitBtn">Send the booking request</button>
         <p id="bookingError" class="note" style="display:none;color:var(--accent-warm)"></p>
-        <p class="note">Or write to <a href="mailto:booking@overgroundrailroad.live">booking@overgroundrailroad.live</a>.
+        <p class="note">Or write to <a href="mailto:booking@infosoullaboratories.com">booking@infosoullaboratories.com</a>.
           <a href="band/site/speaking-ai.html">The one-sheet</a> has all of this on one page for forwarding;
           <a href="syllabus/">the syllabus</a> has each class in full.</p>
       </form>
@@ -1509,6 +1530,7 @@
   </div>
 </section>
 
+</main>
 <footer>
   <div class="wrap">
     <div class="foot-links">
@@ -1760,7 +1782,7 @@
   // Contact form - actually delivers via FormSubmit (no backend required for a
   // static site). First submission to a new address requires a one-time click
   // on a confirmation email FormSubmit sends to that inbox before delivery starts.
-  const CONTACT_ENDPOINT = 'https://formsubmit.co/ajax/brock.satter@gmail.com';
+  const CONTACT_ENDPOINT = 'https://formsubmit.co/ajax/booking@infosoullaboratories.com';
 
   async function handleSubmit(e){
     e.preventDefault();
@@ -1793,7 +1815,7 @@
     } catch(err){
       btn.disabled = false;
       btn.textContent = 'Request a Consultation';
-      errorEl.textContent = "Something went wrong sending this. You can also email us directly at brock.satter@gmail.com and we'll get right back to you.";
+      errorEl.textContent = "Something went wrong sending this. You can also email us directly at booking@infosoullaboratories.com and we'll get right back to you.";
       errorEl.style.display = 'block';
     }
   }
@@ -1822,7 +1844,7 @@
       form.parentElement.innerHTML = '<h3>Thank you.</h3><p>We have the request and will reply within one business day with a confirmation and the invoice.</p>';
     } catch(err){
       btn.disabled = false; btn.textContent = 'Send the booking request';
-      errorEl.textContent = "Something went wrong sending this. Email booking@overgroundrailroad.live and we will get right back to you.";
+      errorEl.textContent = "Something went wrong sending this. Email booking@infosoullaboratories.com and we will get right back to you.";
       errorEl.style.display = 'block';
     }
   }
@@ -1853,11 +1875,19 @@
       note.style.display = 'none';
     } catch(err){
       btn.disabled = false; btn.textContent = 'Tell me when it is out';
-      note.textContent = 'That did not send. Email booking@overgroundrailroad.live and we will add you.';
+      note.textContent = 'That did not send. Email booking@infosoullaboratories.com and we will add you.';
       note.style.color = 'var(--accent-warm)';
     }
   }
 </script>
 
+<script>
+(function(){
+  var v = document.querySelector('video.studio-loop');
+  if (!v || !('IntersectionObserver' in window)) return;
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { v.setAttribute('controls', ''); return; }
+  new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting) { v.play().catch(function(){}); } else { v.pause(); } }); }, {rootMargin: '200px'}).observe(v);
+})();
+</script>
 </body>
 </html>
